@@ -1,0 +1,15 @@
+# Entornos virtuales
+myenv/
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# SO
+.DS_Store
+Thumbs.db
