@@ -209,12 +209,25 @@ with st.sidebar:
 
     st.markdown("**🚡 Líneas**")
     lineas_disp = sorted(df["linea"].unique())
-    lineas_sel = st.multiselect(
-        "Seleccionar líneas",
-        options=lineas_disp,
-        default=lineas_disp,
-        label_visibility="collapsed"
-    )
+
+    if st.button("🔄 Seleccionar todo"):
+        for linea in lineas_disp:
+            st.session_state[f"chk_{linea}"] = True
+        st.experimental_rerun()
+
+    lineas_sel = []
+    st.markdown("Selecciona las líneas visibles:")
+    for linea in lineas_disp:
+        checked = st.checkbox(
+            linea,
+            value=st.session_state.get(f"chk_{linea}", True),
+            key=f"chk_{linea}"
+        )
+        if checked:
+            lineas_sel.append(linea)
+
+    if not lineas_sel:
+        st.warning("⚠️ No hay líneas seleccionadas. Marca al menos una línea.")
 
     st.markdown("**⏰ Horario**")
     hora_range = st.slider("Rango de horas", 5, 22, (5, 22))
