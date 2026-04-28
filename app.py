@@ -256,12 +256,6 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown(f"""
-    <div style='font-size:0.72rem; color:#7A8FA6; line-height:1.8;'>
-      <b style='color:#00B4FF;'>GRUPO 19</b><br>
-      Computación en la Nube<br>
-      UMSA · La Paz, Bolivia<br>
-      <span style='color:#2DC653;'>● Datos simulados activos</span>
-    </div>
     """, unsafe_allow_html=True)
 
 # ─── Filtrado ─────────────────────────────────────────────────────────────────
@@ -526,8 +520,7 @@ with tab3:
         ],
         hovertemplate="<b>%{y}</b> — %{x}<br>Pasajeros: %{z:,.0f}<extra></extra>",
         colorbar=dict(
-            title="Pasajeros",
-            titlefont=dict(color="#E8EAF0"),
+            title=dict(text="Pasajeros", font=dict(color="#E8EAF0")),
             tickfont=dict(color="#E8EAF0"),
             bgcolor="#111827",
         )
