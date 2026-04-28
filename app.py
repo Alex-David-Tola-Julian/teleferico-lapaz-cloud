@@ -31,11 +31,12 @@ st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow:wght@300;400;600;800&display=swap');
 
-  html, body, [class*="css"] {
+  html, body {
     font-family: 'Barlow', sans-serif;
     background-color: #0A0E1A;
     color: #E8EAF0;
   }
+  /* Eliminado el [class*="css"] porque corrompe el layout flexbox interno de Streamlit */
   .main { background-color: #0A0E1A; }
 
   /* Header principal */
