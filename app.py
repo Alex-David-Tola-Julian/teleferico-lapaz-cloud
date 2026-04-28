@@ -234,10 +234,25 @@ with st.sidebar:
 
     st.markdown("**📅 Días de la semana**")
     dias_orden = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]
-    dias_sel = st.multiselect(
-        "Días", options=dias_orden, default=dias_orden,
-        label_visibility="collapsed"
-    )
+
+    if st.button("🔄 Seleccionar todos los días"):
+        for dia in dias_orden:
+            st.session_state[f"chk_{dia}"] = True
+        st.experimental_rerun()
+
+    dias_sel = []
+    st.markdown("Selecciona los días visibles:")
+    for dia in dias_orden:
+        checked = st.checkbox(
+            dia,
+            value=st.session_state.get(f"chk_{dia}", True),
+            key=f"chk_{dia}"
+        )
+        if checked:
+            dias_sel.append(dia)
+
+    if not dias_sel:
+        st.warning("⚠️ No hay días seleccionados. Marca al menos un día.")
 
     st.markdown("---")
     st.markdown(f"""
