@@ -3,6 +3,7 @@ app.py — Dashboard: Análisis de Datos del Mi Teleférico
 Grupo 19 · Computación en la Nube · UMSA · 2026
 """
 
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -168,18 +169,23 @@ COLOR_LINEAS = {
 }
 
 # ─── Carga de datos ────────────────────────────────────────────────────────────
+CSV_RUTA = os.path.join(os.path.dirname(__file__), "data", "teleferico_lapaz.csv")
+
 @st.cache_data(ttl=300, show_spinner=False)
 def cargar_datos():
-    import sys, os
-    sys.path.insert(0, os.path.dirname(__file__))
-    from data_generator import generar_dataset
-    df = generar_dataset(dias=180)
+    if os.path.exists(CSV_RUTA):
+        df = pd.read_csv(CSV_RUTA)
+    else:
+        from data_generator import generar_dataset
+        df = generar_dataset(dias=180)
+        os.makedirs(os.path.dirname(CSV_RUTA), exist_ok=True)
+        df.to_csv(CSV_RUTA, index=False)
+
+    df["fecha"] = pd.to_datetime(df["fecha"])
     return df
 
 with st.spinner("🚡 Cargando datos del teleférico..."):
     df = cargar_datos()
-
-df["fecha"] = pd.to_datetime(df["fecha"])
 
 # ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 with st.sidebar:
