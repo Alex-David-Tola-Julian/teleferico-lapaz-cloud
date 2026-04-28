@@ -272,7 +272,7 @@ dff = df[mask].copy()
 # ─── HEADER ───────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="hero-header">
-  <p class="hero-title">🚡 Mi Teleférico · Análisis Cloud</p>
+  <p class="hero-title">🚡 Mi Teleférico · Análisis de datos</p>
   <p class="hero-subtitle">Sistema de Monitoreo y Predicción de Pasajeros — La Paz, Bolivia</p>
   <span class="hero-badge">GRUPO 19 · COMPUTACIÓN EN LA NUBE · UMSA 2026</span>
 </div>
