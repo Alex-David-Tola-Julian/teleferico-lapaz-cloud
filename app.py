@@ -10,10 +10,13 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import folium
+import requests
 from streamlit_folium import st_folium
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 import warnings
 warnings.filterwarnings("ignore")
+load_dotenv()
 
 # ─── Configuración de página ──────────────────────────────────────────────────
 st.set_page_config(
@@ -171,8 +174,46 @@ COLOR_LINEAS = {
 # ─── Carga de datos ────────────────────────────────────────────────────────────
 CSV_RUTA = os.path.join(os.path.dirname(__file__), "data", "teleferico_lapaz.csv")
 
+def cargar_datos_supabase():
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_ANON_KEY")
+    table_name = os.getenv("SUPABASE_TABLE", "teleferico")
+
+    if not url or not key:
+        raise RuntimeError("Supabase no configurado. Revisa .env")
+
+    rest_url = f"{url.rstrip('/')}/rest/v1/{table_name}?select=*"
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Accept": "application/json",
+    }
+
+    response = requests.get(rest_url, headers=headers)
+    if response.status_code != 200:
+        raise RuntimeError(f"Supabase request fallida: {response.status_code} - {response.text}")
+
+    data = response.json()
+    if not isinstance(data, list) or not data:
+        raise RuntimeError("No se encontraron registros en Supabase.")
+
+    df = pd.DataFrame(data)
+    return df
+
 @st.cache_data(ttl=300, show_spinner=False)
 def cargar_datos():
+    use_supabase = os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_ANON_KEY")
+    if use_supabase:
+        try:
+            df = cargar_datos_supabase()
+            st.info("🔌 Datos cargados desde Supabase.")
+            if "fecha" in df.columns:
+                df["fecha"] = pd.to_datetime(df["fecha"])
+                df["fecha"] = df["fecha"].dt.tz_localize(None)
+            return df
+        except Exception as error:
+            st.warning(f"⚠️ No se pudo cargar Supabase. Usando datos locales. {error}")
+
     if os.path.exists(CSV_RUTA):
         df = pd.read_csv(CSV_RUTA)
     else:
