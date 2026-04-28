@@ -210,7 +210,7 @@ with st.sidebar:
     st.markdown("**🚡 Líneas**")
     lineas_disp = sorted(df["linea"].unique())
 
-    if st.button("🔄 Seleccionar todo"):
+    if st.button("Seleccionar todo"):
         for linea in lineas_disp:
             st.session_state[f"chk_{linea}"] = True
         st.experimental_rerun()
@@ -235,7 +235,7 @@ with st.sidebar:
     st.markdown("**📅 Días de la semana**")
     dias_orden = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"]
 
-    if st.button("🔄 Seleccionar todos los días"):
+    if st.button("Seleccionar todos los días"):
         for dia in dias_orden:
             st.session_state[f"chk_{dia}"] = True
         st.experimental_rerun()
