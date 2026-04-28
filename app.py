@@ -395,69 +395,73 @@ with tab1:
     col_mapa, col_info = st.columns([3, 1])
 
     with col_mapa:
-        # Calcular flujo por estación
-        flujo_est = dff.groupby(["estacion","linea","latitud","longitud"]).agg(
-            pasajeros=("pasajeros","sum"),
-            saturacion=("saturacion","mean")
-        ).reset_index()
+        try:
+            # Calcular flujo por estación
+            flujo_est = dff.groupby(["estacion","linea","latitud","longitud"]).agg(
+                pasajeros=("pasajeros","sum"),
+                saturacion=("saturacion","mean")
+            ).reset_index()
 
-        m = folium.Map(
-            location=[-16.505, -68.128],
-            zoom_start=13,
-            tiles="CartoDB dark_matter",
-        )
+            m = folium.Map(
+                location=[-16.505, -68.128],
+                zoom_start=13,
+                tiles="CartoDB dark_matter",
+            )
 
-        # Dibujar rutas por línea
-        lineas_rutas = {
-            "Roja":     [(-16.530,-68.119),(-16.520,-68.115),(-16.504,-68.113),(-16.497,-68.115)],
-            "Amarilla": [(-16.508,-68.131),(-16.503,-68.138),(-16.499,-68.143),(-16.494,-68.148)],
-            "Verde":    [(-16.507,-68.123),(-16.513,-68.127),(-16.520,-68.130),(-16.535,-68.125)],
-            "Azul":     [(-16.490,-68.120),(-16.495,-68.118),(-16.500,-68.116),(-16.505,-68.114)],
-            "Naranja":  [(-16.478,-68.154),(-16.485,-68.148),(-16.497,-68.136),(-16.530,-68.115)],
-            "Celeste":  [(-16.472,-68.165),(-16.480,-68.158),(-16.493,-68.142),(-16.508,-68.110)],
-            "Blanca":   [(-16.550,-68.105),(-16.542,-68.108),(-16.535,-68.112),(-16.528,-68.118)],
-            "Café":     [(-16.555,-68.101),(-16.545,-68.104),(-16.510,-68.109),(-16.502,-68.107)],
-            "Plateada": [(-16.490,-68.145),(-16.480,-68.150),(-16.474,-68.156),(-16.501,-68.133)],
-            "Dorada":   [(-16.465,-68.170),(-16.470,-68.162),(-16.475,-68.155),(-16.483,-68.147)],
-            "Morada":   [(-16.538,-68.108),(-16.525,-68.106),(-16.518,-68.110),(-16.510,-68.112)],
-        }
+            # Dibujar rutas por línea
+            lineas_rutas = {
+                "Roja":     [(-16.530,-68.119),(-16.520,-68.115),(-16.504,-68.113),(-16.497,-68.115)],
+                "Amarilla": [(-16.508,-68.131),(-16.503,-68.138),(-16.499,-68.143),(-16.494,-68.148)],
+                "Verde":    [(-16.507,-68.123),(-16.513,-68.127),(-16.520,-68.130),(-16.535,-68.125)],
+                "Azul":     [(-16.490,-68.120),(-16.495,-68.118),(-16.500,-68.116),(-16.505,-68.114)],
+                "Naranja":  [(-16.478,-68.154),(-16.485,-68.148),(-16.497,-68.136),(-16.530,-68.115)],
+                "Celeste":  [(-16.472,-68.165),(-16.480,-68.158),(-16.493,-68.142),(-16.508,-68.110)],
+                "Blanca":   [(-16.550,-68.105),(-16.542,-68.108),(-16.535,-68.112),(-16.528,-68.118)],
+                "Café":     [(-16.555,-68.101),(-16.545,-68.104),(-16.510,-68.109),(-16.502,-68.107)],
+                "Plateada": [(-16.490,-68.145),(-16.480,-68.150),(-16.474,-68.156),(-16.501,-68.133)],
+                "Dorada":   [(-16.465,-68.170),(-16.470,-68.162),(-16.475,-68.155),(-16.483,-68.147)],
+                "Morada":   [(-16.538,-68.108),(-16.525,-68.106),(-16.518,-68.110),(-16.510,-68.112)],
+            }
 
-        for linea, coords in lineas_rutas.items():
-            if linea in lineas_sel:
-                color = COLOR_LINEAS.get(linea, "#FFFFFF")
-                folium.PolyLine(
-                    coords, color=color, weight=4, opacity=0.85,
-                    tooltip=f"Línea {linea}"
+            for linea, coords in lineas_rutas.items():
+                if linea in lineas_sel:
+                    color = COLOR_LINEAS.get(linea, "#FFFFFF")
+                    folium.PolyLine(
+                        coords, color=color, weight=4, opacity=0.85,
+                        tooltip=f"Línea {linea}"
+                    ).add_to(m)
+
+            # Marcadores de estaciones
+            for _, row in flujo_est.iterrows():
+                color = COLOR_LINEAS.get(row["linea"], "#FFFFFF")
+                sat = row["saturacion"]
+                radio = 6 + int(sat / 15)
+                fill_color = "#E63946" if sat > 75 else "#FFB703" if sat > 50 else "#2DC653"
+
+                popup_html = f"""
+                <div style='font-family:monospace; font-size:12px; min-width:160px;'>
+                  <b style='color:{color};'>● {row['estacion']}</b><br>
+                  <span>Línea <b>{row['linea']}</b></span><br>
+                  <span>Pasajeros: <b>{int(row['pasajeros']):,}</b></span><br>
+                  <span>Saturación: <b style='color:{fill_color};'>{sat:.1f}%</b></span>
+                </div>
+                """
+                folium.CircleMarker(
+                    location=[row["latitud"], row["longitud"]],
+                    radius=radio,
+                    color=color,
+                    fill=True,
+                    fill_color=fill_color,
+                    fill_opacity=0.85,
+                    popup=folium.Popup(popup_html, max_width=220),
+                    tooltip=f"{row['estacion']} — {sat:.0f}% saturación",
                 ).add_to(m)
 
-        # Marcadores de estaciones
-        for _, row in flujo_est.iterrows():
-            color = COLOR_LINEAS.get(row["linea"], "#FFFFFF")
-            sat = row["saturacion"]
-            radio = 6 + int(sat / 15)
-            fill_color = "#E63946" if sat > 75 else "#FFB703" if sat > 50 else "#2DC653"
-
-            popup_html = f"""
-            <div style='font-family:monospace; font-size:12px; min-width:160px;'>
-              <b style='color:{color};'>● {row['estacion']}</b><br>
-              <span>Línea <b>{row['linea']}</b></span><br>
-              <span>Pasajeros: <b>{int(row['pasajeros']):,}</b></span><br>
-              <span>Saturación: <b style='color:{fill_color};'>{sat:.1f}%</b></span>
-            </div>
-            """
-            folium.CircleMarker(
-                location=[row["latitud"], row["longitud"]],
-                radius=radio,
-                color=color,
-                fill=True,
-                fill_color=fill_color,
-                fill_opacity=0.85,
-                popup=folium.Popup(popup_html, max_width=220),
-                tooltip=f"{row['estacion']} — {sat:.0f}% saturación",
-            ).add_to(m)
-
-        st_folium(m, width=700, height=480, use_container_width=True, returned_objects=[])
-
+            # Usar componentes HTML directamente suele ser más estable que st_folium en tabs/columnas
+            import streamlit.components.v1 as components
+            components.html(m._repr_html_(), height=500)
+        except Exception as e:
+            st.error(f"Error generando el mapa: {str(e)}")
     with col_info:
         st.markdown("**Leyenda de líneas**")
         for linea in lineas_sel:
@@ -814,12 +818,3 @@ with tab5:
         yaxis=dict(gridcolor="#1E3A5F"),
     )
     st.plotly_chart(fig_bar, use_container_width=True)
-
-# ─── Footer ───────────────────────────────────────────────────────────────────
-st.markdown("""
-<div style='text-align:center; padding:2rem 0 1rem; color:#2A3A4A; font-size:0.78rem;
-     font-family:Space Mono,monospace; border-top:1px solid #1E2A3A; margin-top:2rem;'>
-  GRUPO 19 · Computación en la Nube · Universidad Mayor de San Andrés · La Paz, Bolivia · 2026<br>
-  <span style='color:#1E3A5F;'>Mi Teleférico Analytics Dashboard · Datos simulados para fines académicos</span>
-</div>
-""", unsafe_allow_html=True)
