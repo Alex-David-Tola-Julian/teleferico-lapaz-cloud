@@ -241,12 +241,17 @@ with st.sidebar:
     st.markdown("**🗓 Rango de fechas**")
     fecha_min = df["fecha"].min().date()
     fecha_max = df["fecha"].max().date()
-    fecha_inicio, fecha_fin = st.date_input(
+    fechas = st.date_input(
         "Período",
         value=(fecha_max - timedelta(days=30), fecha_max),
         min_value=fecha_min, max_value=fecha_max,
         label_visibility="collapsed"
     )
+    if isinstance(fechas, tuple) and len(fechas) == 2:
+        fecha_inicio, fecha_fin = fechas
+    else:
+        fecha_inicio = fechas[0] if isinstance(fechas, tuple) else fechas
+        fecha_fin = fecha_inicio
 
     st.markdown("**🚡 Líneas**")
     lineas_disp = sorted(df["linea"].unique())
@@ -259,9 +264,10 @@ with st.sidebar:
     lineas_sel = []
     st.markdown("Selecciona las líneas visibles:")
     for linea in lineas_disp:
+        if f"chk_{linea}" not in st.session_state:
+            st.session_state[f"chk_{linea}"] = True
         checked = st.checkbox(
             linea,
-            value=st.session_state.get(f"chk_{linea}", True),
             key=f"chk_{linea}"
         )
         if checked:
@@ -284,9 +290,10 @@ with st.sidebar:
     dias_sel = []
     st.markdown("Selecciona los días visibles:")
     for dia in dias_orden:
+        if f"chk_{dia}" not in st.session_state:
+            st.session_state[f"chk_{dia}"] = True
         checked = st.checkbox(
             dia,
-            value=st.session_state.get(f"chk_{dia}", True),
             key=f"chk_{dia}"
         )
         if checked:
@@ -309,6 +316,22 @@ mask = (
     (df["dia_semana"].isin(dias_sel))
 )
 dff = df[mask].copy()
+
+if dff.empty:
+    st.warning("⚠️ No hay datos con los filtros actuales. Ajusta las líneas, días o rango de fechas.")
+
+with st.expander("🔍 Depuración de filtros", expanded=True):
+    st.write("**Filtrado activo:**")
+    st.write({
+        "Fecha inicio": fecha_inicio,
+        "Fecha fin": fecha_fin,
+        "Líneas seleccionadas": lineas_sel,
+        "Días seleccionados": dias_sel,
+        "Rango de horas": f"{hora_range[0]} - {hora_range[1]}",
+        "Filas resultantes": len(dff),
+    })
+    st.write("**Primeros registros filtrados**")
+    st.dataframe(dff.head(10))
 
 # ─── HEADER ───────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -367,6 +390,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # ══════════════════════════════════════════════════════════════════════════════
 with tab1:
     st.markdown('<p class="section-title">Mapa de Flujo de Pasajeros — La Paz</p>', unsafe_allow_html=True)
+    st.markdown('<span style="color:#7A8FA6; font-size:0.85rem;">debug: tab1 cargado</span>', unsafe_allow_html=True)
 
     col_mapa, col_info = st.columns([3, 1])
 
@@ -432,7 +456,7 @@ with tab1:
                 tooltip=f"{row['estacion']} — {sat:.0f}% saturación",
             ).add_to(m)
 
-        st_folium(m, width=None, height=480, returned_objects=[])
+        st_folium(m, width=700, height=480, use_container_width=True, returned_objects=[])
 
     with col_info:
         st.markdown("**Leyenda de líneas**")
@@ -465,7 +489,7 @@ with tab1:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab2:
     st.markdown('<p class="section-title">Análisis Temporal de Pasajeros</p>', unsafe_allow_html=True)
-
+    st.markdown('<span style="color:#7A8FA6; font-size:0.85rem;">debug: tab2 cargado</span>', unsafe_allow_html=True)
     col_a, col_b = st.columns(2)
 
     # Gráfica de pasajeros por hora (perfil diario)
@@ -542,6 +566,7 @@ with tab2:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab3:
     st.markdown('<p class="section-title">Mapa de Calor — Demanda por Hora y Día</p>', unsafe_allow_html=True)
+    st.markdown('<span style="color:#7A8FA6; font-size:0.85rem;">debug: tab3 cargado</span>', unsafe_allow_html=True)
 
     linea_hm = st.selectbox("Seleccionar línea para el heatmap", options=["Todas"] + lineas_sel)
 
@@ -602,6 +627,7 @@ with tab3:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab4:
     st.markdown('<p class="section-title">Predicción de Demanda — Próximos 30 días</p>', unsafe_allow_html=True)
+    st.markdown('<span style="color:#7A8FA6; font-size:0.85rem;">debug: tab4 cargado</span>', unsafe_allow_html=True)
 
     linea_pred = st.selectbox("Línea a predecir", options=lineas_sel, key="pred_linea")
     dias_pred  = st.slider("Días a predecir", 7, 60, 30)
@@ -709,6 +735,7 @@ with tab4:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab5:
     st.markdown('<p class="section-title">Ranking de Estaciones por Flujo de Pasajeros</p>', unsafe_allow_html=True)
+    st.markdown('<span style="color:#7A8FA6; font-size:0.85rem;">debug: tab5 cargado</span>', unsafe_allow_html=True)
 
     col_top, col_bot = st.columns(2)
 
