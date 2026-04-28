@@ -59,6 +59,7 @@ streamlit run app.py
 
 - Subir el proyecto a GitHub y conectar Streamlit Cloud para publicar la app pública.
 - Guardar los datos generados en Supabase y leerlos desde `app.py`.
+- Usar `.env` con `SUPABASE_URL` y `SUPABASE_ANON_KEY` para cargar datos desde la nube.
 - Añadir autenticación básica y panel de administración si el tiempo lo permite.
 
 ## Dependencias
