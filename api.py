@@ -8,6 +8,7 @@ import os
 import requests
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from pandas.errors import ParserError
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -69,14 +70,30 @@ def get_data():
         return df
 
     if os.path.exists(CSV_RUTA):
-        df = pd.read_csv(CSV_RUTA)
+        try:
+            df = pd.read_csv(CSV_RUTA)
+        except (ParserError, UnicodeDecodeError):
+            # Some rows/bytes in the dataset may be malformed; keep the service
+            # available by skipping invalid lines and tolerating encoding issues.
+            df = pd.read_csv(
+                CSV_RUTA,
+                engine="python",
+                on_bad_lines="skip",
+                encoding="latin-1",
+            )
     else:
         from data_generator import generar_dataset
         df = generar_dataset(fecha_inicio_str="2022-01-01", fecha_fin_str="2024-12-31")
         os.makedirs(os.path.dirname(CSV_RUTA), exist_ok=True)
         df.to_csv(CSV_RUTA, index=False)
 
-    df["fecha"] = pd.to_datetime(df["fecha"])
+    # Normalize types and drop malformed rows that can appear in CSV files.
+    df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
+    df["hora"] = pd.to_numeric(df.get("hora"), errors="coerce")
+    df["pasajeros"] = pd.to_numeric(df.get("pasajeros"), errors="coerce")
+    df["saturacion"] = pd.to_numeric(df.get("saturacion"), errors="coerce")
+    df = df.dropna(subset=["fecha", "hora", "pasajeros", "saturacion"])
+    df["hora"] = df["hora"].astype(int)
     _global_df = df
     return df
 
