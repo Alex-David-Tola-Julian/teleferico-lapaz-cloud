@@ -219,7 +219,7 @@ def cargar_datos():
         df = pd.read_csv(CSV_RUTA)
     else:
         from data_generator import generar_dataset
-        df = generar_dataset(dias=180)
+        df = generar_dataset(fecha_inicio_str="2022-01-01", fecha_fin_str="2024-12-31")
         os.makedirs(os.path.dirname(CSV_RUTA), exist_ok=True)
         df.to_csv(CSV_RUTA, index=False)
 

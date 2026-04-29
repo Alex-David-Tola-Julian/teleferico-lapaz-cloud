@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import Plot from 'react-plotly.js';
+import PlotlyComponent from 'react-plotly.js';
 import { getPrediction } from '../api';
+
+const Plot = PlotlyComponent.default || PlotlyComponent;
 
 const PredictView = ({ filters, config }) => {
   const [data, setData] = useState(null);

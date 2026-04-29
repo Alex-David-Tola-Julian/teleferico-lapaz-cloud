@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import Plot from 'react-plotly.js';
+import PlotlyComponent from 'react-plotly.js';
 import { getTemporalData } from '../api';
+
+const Plot = PlotlyComponent.default || PlotlyComponent;
 
 const COLOR_LINEAS = {
   "Roja": "#E63946", "Amarilla": "#FFB703", "Verde": "#2DC653",

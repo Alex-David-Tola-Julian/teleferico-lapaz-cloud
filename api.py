@@ -72,7 +72,7 @@ def get_data():
         df = pd.read_csv(CSV_RUTA)
     else:
         from data_generator import generar_dataset
-        df = generar_dataset(dias=180)
+        df = generar_dataset(fecha_inicio_str="2022-01-01", fecha_fin_str="2024-12-31")
         os.makedirs(os.path.dirname(CSV_RUTA), exist_ok=True)
         df.to_csv(CSV_RUTA, index=False)
 
@@ -91,9 +91,12 @@ class FilterParams(BaseModel):
 
 def filter_data(params: FilterParams):
     df = get_data()
+    start_dt = pd.to_datetime(params.fecha_inicio)
+    end_dt = pd.to_datetime(params.fecha_fin) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
+    
     mask = (
-        (df["fecha"].dt.date >= pd.to_datetime(params.fecha_inicio).date()) &
-        (df["fecha"].dt.date <= pd.to_datetime(params.fecha_fin).date()) &
+        (df["fecha"] >= start_dt) &
+        (df["fecha"] <= end_dt) &
         (df["linea"].isin(params.lineas)) &
         (df["hora"] >= params.hora_min) &
         (df["hora"] <= params.hora_max) &
@@ -153,13 +156,8 @@ def get_temporal_data(params: FilterParams):
         return {"hourly": [], "daily": [], "dow": []}
 
     # Hourly profile
-    hora_df = dff.groupby(["hora", "linea"])["pasajeros"].mean().reset_index()
-    hourly_res = []
-    for hora in sorted(hora_df["hora"].unique()):
-        row = {"hora": int(hora)}
-        for _, r in hora_df[hora_df["hora"] == hora].iterrows():
-            row[r["linea"]] = float(r["pasajeros"])
-        hourly_res.append(row)
+    hourly_pivot = dff.groupby(["hora", "linea"])["pasajeros"].mean().unstack("linea", fill_value=0).reset_index()
+    hourly_res = hourly_pivot.to_dict(orient="records")
 
     # Daily evolution
     evol_df = dff.groupby("fecha")["pasajeros"].sum().reset_index()
@@ -170,13 +168,12 @@ def get_temporal_data(params: FilterParams):
 
     # Day of week
     dias_order = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-    dow_df = dff.groupby(["dia_semana", "linea"])["pasajeros"].mean().reset_index()
-    dow_res = []
-    for dia in dias_order:
-        row = {"dia_semana": dia}
-        for _, r in dow_df[dow_df["dia_semana"] == dia].iterrows():
-            row[r["linea"]] = float(r["pasajeros"])
-        dow_res.append(row)
+    # Group and reindex
+    dow_df = dff.groupby(["dia_semana", "linea"])["pasajeros"].mean().unstack("linea", fill_value=0)
+    # Ensure dias_order are present
+    existing_days = [d for d in dias_order if d in dow_df.index]
+    dow_df = dow_df.reindex(existing_days).reset_index()
+    dow_res = dow_df.to_dict(orient="records")
 
     return {
         "hourly": hourly_res,

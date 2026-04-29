@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import Plot from 'react-plotly.js';
+import PlotlyComponent from 'react-plotly.js';
 import { getHeatmap } from '../api';
+
+const Plot = PlotlyComponent.default || PlotlyComponent;
 
 const HeatmapView = ({ filters, config }) => {
   const [data, setData] = useState({ x: [], y: [], z: [], insight: null });
