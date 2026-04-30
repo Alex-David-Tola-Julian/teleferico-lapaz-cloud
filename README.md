@@ -49,7 +49,7 @@ python data_generator.py
 4. Levantar backend (FastAPI):
 
 ```powershell
-uvicorn api:app --reload --host 0.0.0.0 --port 8000
+uvicorn api:app --reload --host 0.0.0.0 --port 8001
 ```
 
 5. Levantar frontend (React):

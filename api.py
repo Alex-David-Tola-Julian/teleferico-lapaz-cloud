@@ -26,6 +26,35 @@ app.add_middleware(
 
 # ─── Carga de datos ────────────────────────────────────────────────────────────
 CSV_RUTA = os.path.join(os.path.dirname(__file__), "data", "teleferico_lapaz.csv")
+LINEAS_OFICIALES = [
+    "Roja",
+    "Amarilla",
+    "Verde",
+    "Azul",
+    "Naranja",
+    "Blanca",
+    "Celeste",
+    "Morada",
+    "Café",
+    "Plateada",
+]
+
+
+def normalizar_lineas(df: pd.DataFrame) -> pd.DataFrame:
+    if "linea" not in df.columns:
+        return df
+
+    aliases = {
+        "Cafe": "Café",
+        "CAFÉ": "Café",
+        "cafÃ©": "Café",
+    }
+
+    df = df.copy()
+    df["linea"] = df["linea"].astype(str).str.strip().replace(aliases)
+    # Keep only official Mi Teleférico lines to avoid malformed CSV/Supabase values.
+    df = df[df["linea"].isin(LINEAS_OFICIALES)]
+    return df
 
 def cargar_datos_supabase():
     url = os.getenv("SUPABASE_URL")
@@ -63,6 +92,7 @@ def get_data():
 
     df = cargar_datos_supabase()
     if df is not None:
+        df = normalizar_lineas(df)
         if "fecha" in df.columns:
             df["fecha"] = pd.to_datetime(df["fecha"])
             df["fecha"] = df["fecha"].dt.tz_localize(None)
@@ -88,6 +118,7 @@ def get_data():
         df.to_csv(CSV_RUTA, index=False)
 
     # Normalize types and drop malformed rows that can appear in CSV files.
+    df = normalizar_lineas(df)
     df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
     df["hora"] = pd.to_numeric(df.get("hora"), errors="coerce")
     df["pasajeros"] = pd.to_numeric(df.get("pasajeros"), errors="coerce")
@@ -126,7 +157,7 @@ def get_config():
     df = get_data()
     fecha_min = df["fecha"].min().date().isoformat()
     fecha_max = df["fecha"].max().date().isoformat()
-    lineas_disp = sorted(df["linea"].unique().tolist())
+    lineas_disp = LINEAS_OFICIALES
     dias_orden = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
     return {
         "fecha_min": fecha_min,

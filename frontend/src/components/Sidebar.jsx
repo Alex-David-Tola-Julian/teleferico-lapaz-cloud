@@ -33,7 +33,7 @@ const Sidebar = ({ config, filters, setFilters }) => {
       <div style={{ textAlign: 'center', padding: '1rem 0 1.5rem 0' }}>
         <span style={{ fontFamily: 'Space Mono', fontSize: '1.5rem', color: '#00B4FF' }}>🚡</span>
         <p style={{ fontFamily: 'Space Mono', fontSize: '0.9rem', color: '#00B4FF', margin: '0.3rem 0 0' }}>Mi Teleférico</p>
-        <p style={{ fontSize: '0.72rem', color: '#7A8FA6', margin: 0 }}>Dashboard Analytics · La Paz</p>
+        <p style={{ fontSize: '0.72rem', color: '#7A8FA6', margin: 0 }}>Dashboard de Análisis de Datos · La Paz</p>
       </div>
 
       <div className="mb-4">
