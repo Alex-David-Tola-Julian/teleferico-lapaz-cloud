@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
@@ -56,6 +56,24 @@ def normalizar_lineas(df: pd.DataFrame) -> pd.DataFrame:
     df = df[df["linea"].isin(LINEAS_OFICIALES)]
     return df
 
+
+def normalizar_dias_semana(df: pd.DataFrame) -> pd.DataFrame:
+    if "dia_semana" not in df.columns:
+        return df
+
+    aliases = {
+        "Miercoles": "Miércoles",
+        "Sabado": "Sábado",
+        "MiÃ©rcoles": "Miércoles",
+        "SÃ¡bado": "Sábado",
+    }
+
+    df = df.copy()
+    df["dia_semana"] = df["dia_semana"].astype(str).str.strip().replace(aliases)
+    dias_validos = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    df = df[df["dia_semana"].isin(dias_validos)]
+    return df
+
 def cargar_datos_supabase():
     url = os.getenv("SUPABASE_URL")
     key = os.getenv("SUPABASE_ANON_KEY")
@@ -93,6 +111,7 @@ def get_data():
     df = cargar_datos_supabase()
     if df is not None:
         df = normalizar_lineas(df)
+        df = normalizar_dias_semana(df)
         if "fecha" in df.columns:
             df["fecha"] = pd.to_datetime(df["fecha"])
             df["fecha"] = df["fecha"].dt.tz_localize(None)
@@ -119,6 +138,7 @@ def get_data():
 
     # Normalize types and drop malformed rows that can appear in CSV files.
     df = normalizar_lineas(df)
+    df = normalizar_dias_semana(df)
     df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
     df["hora"] = pd.to_numeric(df.get("hora"), errors="coerce")
     df["pasajeros"] = pd.to_numeric(df.get("pasajeros"), errors="coerce")
@@ -230,7 +250,7 @@ def get_temporal_data(params: FilterParams):
     }
 
 @app.post("/api/heatmap")
-def get_heatmap(params: FilterParams, linea: Optional[str] = Body(None)):
+def get_heatmap(params: FilterParams, linea: Optional[str] = None):
     dff = filter_data(params)
     if linea and linea != "Todas":
         dff = dff[dff["linea"] == linea]
