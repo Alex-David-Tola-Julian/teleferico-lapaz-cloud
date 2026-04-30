@@ -18,8 +18,21 @@ const TemporalView = ({ filters, config }) => {
     getTemporalData(filters).then(setData).catch(console.error);
   }, [filters]);
 
+  const lineasDisponibles = new Set();
+  data.hourly.forEach(row => {
+    Object.keys(row).forEach(key => {
+      if (key !== 'hora' && key !== 'dia_semana') lineasDisponibles.add(key);
+    });
+  });
+  data.dow.forEach(row => {
+    Object.keys(row).forEach(key => {
+      if (key !== 'hora' && key !== 'dia_semana') lineasDisponibles.add(key);
+    });
+  });
+  const lineasActivas = filters.lineas.filter(linea => lineasDisponibles.has(linea));
+
   // Format data for Plotly
-  const hourlyTraces = filters.lineas.map(linea => ({
+  const hourlyTraces = lineasActivas.map(linea => ({
     x: data.hourly.map(d => d.hora),
     y: data.hourly.map(d => d[linea] || 0),
     name: linea,
@@ -49,7 +62,7 @@ const TemporalView = ({ filters, config }) => {
     }
   ];
 
-  const dowTraces = filters.lineas.map(linea => ({
+  const dowTraces = lineasActivas.map(linea => ({
     x: data.dow.map(d => d.dia_semana),
     y: data.dow.map(d => d[linea] || 0),
     name: linea,
@@ -74,8 +87,15 @@ const TemporalView = ({ filters, config }) => {
         <div style={{flex: 1}}>
           <h3 style={{fontSize: '0.95rem', marginBottom: '0.5rem', color: 'var(--text-light)'}}>Perfil de demanda por hora del día</h3>
           <Plot
+            key="temporal-hourly"
             data={hourlyTraces}
-            layout={{ ...layoutBase, height: 350, legend: { x: 0, y: 1 } }}
+            layout={{
+              ...layoutBase,
+              xaxis: { ...layoutBase.xaxis, title: "Hora", tickmode: 'linear', dtick: 1 },
+              yaxis: { ...layoutBase.yaxis, title: "Pasajeros promedio" },
+              height: 350,
+              legend: { x: 0, y: 1 }
+            }}
             useResizeHandler={true}
             style={{ width: '100%', height: '350px' }}
           />
@@ -83,8 +103,15 @@ const TemporalView = ({ filters, config }) => {
         <div style={{flex: 1}}>
           <h3 style={{fontSize: '0.95rem', marginBottom: '0.5rem', color: 'var(--text-light)'}}>Evolución diaria de pasajeros</h3>
           <Plot
+            key="temporal-daily"
             data={dailyTraces}
-            layout={{ ...layoutBase, height: 350, legend: { x: 0, y: 1 } }}
+            layout={{
+              ...layoutBase,
+              xaxis: { ...layoutBase.xaxis, title: "Fecha", type: 'date' },
+              yaxis: { ...layoutBase.yaxis, title: "Pasajeros" },
+              height: 350,
+              legend: { x: 0, y: 1 }
+            }}
             useResizeHandler={true}
             style={{ width: '100%', height: '350px' }}
           />
@@ -94,8 +121,22 @@ const TemporalView = ({ filters, config }) => {
       <div style={{marginTop: '2rem'}}>
         <h3 style={{fontSize: '0.95rem', marginBottom: '0.5rem', color: 'var(--text-light)'}}>Demanda promedio por día de la semana</h3>
         <Plot
+          key="temporal-dow"
           data={dowTraces}
-          layout={{ ...layoutBase, height: 350, barmode: 'group', legend: { orientation: 'h', y: -0.2 } }}
+          layout={{
+            ...layoutBase,
+            xaxis: {
+              ...layoutBase.xaxis,
+              title: "Día de la semana",
+              type: 'category',
+              categoryorder: 'array',
+              categoryarray: config.dias_orden
+            },
+            yaxis: { ...layoutBase.yaxis, title: "Pasajeros promedio" },
+            height: 350,
+            barmode: 'group',
+            legend: { orientation: 'h', y: -0.2 }
+          }}
           useResizeHandler={true}
           style={{ width: '100%', height: '350px' }}
         />
