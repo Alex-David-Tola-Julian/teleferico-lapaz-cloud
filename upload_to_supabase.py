@@ -169,4 +169,4 @@ if r_s.status_code == 200:
         fe = row.get("factor_escala", "N/A")
         print(f"     {row['fecha']}  {row['linea']:10} · {row['estacion']:25} · {row['pasajeros']:4} pax  · escala={fe}")
 
-print(f"\n🎉 ¡Listo! Ahora corre: streamlit run app.py")
+print(f"\n🎉 ¡Listo! Ahora corre backend con: uvicorn api:app --reload --host 0.0.0.0 --port 8000")

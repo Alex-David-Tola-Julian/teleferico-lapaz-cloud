@@ -4,8 +4,12 @@ Proyecto del Grupo 19 para la materia Computación en la Nube (UMSA, 2026).
 
 ## Descripción
 
-Dashboard interactivo de análisis de datos del Mi Teleférico de La Paz.
-El sistema utiliza datos simulados realistas para mostrar:
+Plataforma web de análisis de datos del Mi Teleférico de La Paz con:
+- Backend API en FastAPI
+- Frontend en React + Vite
+- Dataset simulado realista para análisis y predicción
+
+El sistema muestra:
 - Mapa interactivo con estaciones y líneas del teleférico
 - Análisis temporal por hora y por día de la semana
 - Heatmap de demanda hora/día
@@ -14,7 +18,8 @@ El sistema utiliza datos simulados realistas para mostrar:
 
 ## Estructura del proyecto
 
-- `app.py` — aplicación Streamlit del dashboard
+- `api.py` — backend API (FastAPI)
+- `frontend/` — dashboard web (React + Vite)
 - `data_generator.py` — generador de datos sintéticos para el teleférico
 - `data/teleferico_lapaz.csv` — dataset generado
 - `requirements.txt` — dependencias Python
@@ -41,37 +46,45 @@ pip install -r requirements.txt
 python data_generator.py
 ```
 
-4. Ejecutar la app Streamlit:
+4. Levantar backend (FastAPI):
 
 ```powershell
-streamlit run app.py
+uvicorn api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-5. Abrir el enlace local que muestra Streamlit.
+5. Levantar frontend (React):
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+6. Abrir el enlace local que muestra Vite (normalmente `http://localhost:5173`).
 
 ## Notas importantes
 
 - El proyecto utiliza datos simulados con patrones horarios y de demanda que reflejan el uso del teleférico.
-- La app carga datos generados desde `data_generator.py` y muestra análisis sobre el rango de fechas seleccionado.
+- La API carga datos generados desde `data_generator.py` y sirve métricas al frontend.
 - Para la entrega final se puede integrar Supabase como fuente de datos en la nube y para almacenamiento/consulta.
 
 ## Ideas de mejora para el despliegue en la nube
 
-- Subir el proyecto a GitHub y conectar Streamlit Cloud para publicar la app pública.
-- Guardar los datos generados en Supabase y leerlos desde `app.py`.
+- Subir el proyecto a GitHub y desplegar frontend/backend en servicios cloud.
+- Guardar los datos generados en Supabase y leerlos desde `api.py`.
 - Usar `.env` con `SUPABASE_URL` y `SUPABASE_ANON_KEY` para cargar datos desde la nube.
 - Añadir autenticación básica y panel de administración si el tiempo lo permite.
 
 ## Dependencias
 
-- streamlit
 - pandas
 - numpy
 - plotly
 - folium
-- streamlit-folium
 - prophet
 - scikit-learn
+- fastapi
+- uvicorn
 
 ## Contacto
 

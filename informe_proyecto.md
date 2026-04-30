@@ -13,8 +13,8 @@
 El proyecto consiste en un dashboard de análisis de datos del sistema de teleférico de La Paz. Se utiliza un dataset sintético con patrones de demanda reales para demostrar análisis de flujos de pasajeros, picos horarios, saturación y predicciones de demanda.
 
 ### Marco teórico
-- Computación en la Nube: uso de servicios PaaS para despliegue y almacenamiento (Streamlit Cloud, Supabase).
-- Visualización de datos: dashboards interactivos con Streamlit, Plotly y Folium.
+- Computación en la Nube: uso de servicios PaaS para despliegue y almacenamiento (frontend y backend + Supabase).
+- Visualización de datos: dashboard interactivo con React, Plotly y mapas.
 - Análisis de datos: procesamiento con Pandas y generación de métricas agregadas.
 - Modelos de predicción: Prophet y regresión lineal para pronosticar demanda.
 - Datos geoespaciales: trazado de líneas y estaciones sobre un mapa de La Paz.
@@ -28,27 +28,29 @@ Construir una solución de análisis y monitoreo del Mi Teleférico de La Paz qu
 
 ### Estrategia del Proyecto
 #### Modelo de Servicio
-- PaaS: Streamlit Cloud para el dashboard.
+- PaaS: despliegue de frontend y backend como servicios independientes.
 - DBaaS: Supabase para almacenamiento de datos y futura integración.
 - Computación en la nube: uso de Python en un entorno gestionado para análisis y predicción.
 
 #### Modelo de Implementación
 - Implementación híbrida: datos generados localmente y consumidos por la app web.
-- Posible despliegue en la nube usando GitHub + Streamlit Cloud.
+- Posible despliegue en la nube usando GitHub + plataformas para React/FastAPI.
 
 ### Evaluación de la Infraestructura
 #### a. Selección del proveedor
-- Streamlit Cloud: ideal para apps de datos rápidas y gratuitas.
+- Plataforma de frontend (React/Vite): interfaz web interactiva.
 - Supabase: base de datos PostgreSQL en la nube con API REST y autenticación gratuita.
 
 #### b. Diseño de la Arquitectura
 - `data_generator.py` genera dataset sintético.
-- `app.py` procesa y visualiza datos.
+- `api.py` procesa y expone datos mediante endpoints REST.
+- `frontend/` consume la API y visualiza métricas.
 - `README.md` documenta el proyecto.
 - `data/teleferico_lapaz.csv` almacena el dataset.
 
 #### c. Lista de servicios y descripción
-- Streamlit Cloud: despliegue del dashboard como servicio web.
+- FastAPI: backend para exponer métricas y consultas del dataset.
+- React + Vite: frontend del dashboard como aplicación web.
 - Supabase: almacenamiento y consulta de datos en la nube.
 - GitHub: control de versiones y despliegue automático.
 
@@ -73,10 +75,11 @@ Construir una solución de análisis y monitoreo del Mi Teleférico de La Paz qu
 El proyecto demuestra un caso práctico de análisis de datos en la nube mediante visualizaciones, métricas y pronósticos. Es adecuado para la entrega académica y puede escalarse a un sistema real con datos oficiales y almacenamiento en Supabase.
 
 ### Referencias Bibliográficas
-- Streamlit: https://streamlit.io
 - Supabase: https://supabase.com
 - Prophet: https://facebook.github.io/prophet/
 - Folium: https://python-visualization.github.io/folium/
+- FastAPI: https://fastapi.tiangolo.com
+- React: https://react.dev
 - Datos del teleférico de La Paz (fuentes oficiales y reportes históricos, cuando estén disponibles)
 
 ## II. Desarrollo Práctico
