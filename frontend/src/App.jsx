@@ -50,6 +50,9 @@ function App() {
           <h1 className="hero-title">🚡 Mi Teleférico · Análisis de datos</h1>
           <p className="hero-subtitle">Sistema de Monitoreo y Predicción de Pasajeros — La Paz, Bolivia</p>
           <span className="hero-badge">GRUPO 19 · COMPUTACIÓN EN LA NUBE · UMSA 2026</span>
+          <span className={`source-badge ${config.data_source === 'supabase' ? 'supabase' : 'csv'}`}>
+            {config.data_source === 'supabase' ? 'Usamos Supabase' : 'Usamos datos de CSV'}
+          </span>
         </header>
 
         <section className="metrics-grid">

@@ -10,6 +10,7 @@ Registros esperados: ~1,736,064
 import os, sys, json, requests, time
 import pandas as pd
 from dotenv import load_dotenv
+from pandas.errors import ParserError
 
 load_dotenv()
 
@@ -48,7 +49,16 @@ if not os.path.exists(CSV_RUTA):
     guardar_datos(df, CSV_RUTA)
 else:
     print(f"📂 Cargando CSV: {CSV_RUTA}")
-    df = pd.read_csv(CSV_RUTA)
+    try:
+        df = pd.read_csv(CSV_RUTA)
+    except (ParserError, UnicodeDecodeError):
+        print("⚠️  CSV con filas malformadas o encoding mixto; cargando en modo tolerante...")
+        df = pd.read_csv(
+            CSV_RUTA,
+            engine="python",
+            on_bad_lines="skip",
+            encoding="latin-1",
+        )
 
 print(f"📊 Dataset cargado: {len(df):,} registros\n")
 
@@ -78,7 +88,31 @@ if total_existente > 0:
 
 # ─── Preparar DataFrame ───────────────────────────────────────────────────────
 df_up = df.copy()
-df_up["fecha"] = pd.to_datetime(df_up["fecha"]).dt.strftime("%Y-%m-%d")
+
+# Limpieza defensiva para CSV con filas/valores corruptos
+df_up["fecha"] = pd.to_datetime(df_up.get("fecha"), errors="coerce")
+df_up["hora"] = pd.to_numeric(df_up.get("hora"), errors="coerce")
+df_up["pasajeros"] = pd.to_numeric(df_up.get("pasajeros"), errors="coerce")
+df_up["saturacion"] = pd.to_numeric(df_up.get("saturacion"), errors="coerce")
+df_up["latitud"] = pd.to_numeric(df_up.get("latitud"), errors="coerce")
+df_up["longitud"] = pd.to_numeric(df_up.get("longitud"), errors="coerce")
+
+for col in ["dia_semana", "linea", "estacion"]:
+    if col in df_up.columns:
+        df_up[col] = df_up[col].astype(str).str.strip()
+
+antes = len(df_up)
+df_up = df_up.dropna(subset=["fecha", "hora", "pasajeros", "saturacion", "latitud", "longitud"])
+df_up = df_up[df_up["hora"].between(0, 23)]
+df_up = df_up[df_up["pasajeros"] >= 0]
+df_up = df_up[df_up["saturacion"] >= 0]
+df_up["hora"] = df_up["hora"].astype(int)
+df_up["pasajeros"] = df_up["pasajeros"].astype(int)
+df_up["fecha"] = df_up["fecha"].dt.strftime("%Y-%m-%d")
+despues = len(df_up)
+
+if despues < antes:
+    print(f"🧹 Filas inválidas descartadas: {antes - despues:,}")
 
 # Eliminar columnas que no existen en Supabase (si vienen del CSV viejo)
 columnas_supabase = [
@@ -104,7 +138,7 @@ print(f"📋 Columnas a subir: {list(df_up.columns)}\n")
 
 # ─── Subir en lotes ───────────────────────────────────────────────────────────
 # Con 1.7M registros usamos lotes más grandes y mostramos ETA
-BATCH   = 1000   # Supabase acepta hasta ~2000 por lote
+BATCH   = int(os.getenv("SUPABASE_BATCH", "500"))
 total   = len(df_up)
 subidos = 0
 errores = 0
@@ -119,19 +153,33 @@ for i in range(0, total, BATCH):
 
     # Reintento automático hasta 3 veces
     exito = False
-    for intento in range(3):
-        r_ins = requests.post(REST, headers=HEADERS, data=json.dumps(lote, default=str))
-        if r_ins.status_code in (200, 201, 204):
-            subidos += len(lote)
-            exito = True
-            break
-        else:
+    ultimo_error = None
+    for intento in range(5):
+        try:
+            r_ins = requests.post(
+                REST,
+                headers=HEADERS,
+                data=json.dumps(lote, default=str),
+                timeout=60,
+            )
+
+            if r_ins.status_code in (200, 201, 204):
+                subidos += len(lote)
+                exito = True
+                break
+
+            ultimo_error = f"HTTP {r_ins.status_code} — {r_ins.text[:180]}"
             reintentos_totales += 1
-            time.sleep(1 + intento)  # backoff
+            time.sleep(2 + intento * 2)  # backoff progresivo
+
+        except requests.exceptions.RequestException as exc:
+            ultimo_error = str(exc)
+            reintentos_totales += 1
+            time.sleep(2 + intento * 2)  # backoff progresivo
 
     if not exito:
         errores += len(lote)
-        print(f"\n   ⚠️  Error lote {i // BATCH + 1}: {r_ins.status_code} — {r_ins.text[:120]}")
+        print(f"\n   ⚠️  Error lote {i // BATCH + 1}: {ultimo_error}")
 
     # Barra de progreso con ETA
     pct      = subidos / total * 100

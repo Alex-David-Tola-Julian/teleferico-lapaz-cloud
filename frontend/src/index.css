@@ -113,6 +113,29 @@ html, body {
   margin-top: 0.8rem;
 }
 
+.source-badge {
+  display: inline-block;
+  margin-left: 0.6rem;
+  margin-top: 0.8rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  border: 1px solid;
+}
+
+.source-badge.supabase {
+  color: #2DC653;
+  background: rgba(45, 198, 83, 0.12);
+  border-color: rgba(45, 198, 83, 0.35);
+}
+
+.source-badge.csv {
+  color: #FFB703;
+  background: rgba(255, 183, 3, 0.14);
+  border-color: rgba(255, 183, 3, 0.35);
+}
+
 /* Metrics Cards */
 .metrics-grid {
   display: grid;

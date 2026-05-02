@@ -102,9 +102,10 @@ def cargar_datos_supabase():
 
 # Global cache for data
 _global_df = None
+_data_source = "csv"
 
 def get_data():
-    global _global_df
+    global _global_df, _data_source
     if _global_df is not None:
         return _global_df
 
@@ -115,6 +116,7 @@ def get_data():
         if "fecha" in df.columns:
             df["fecha"] = pd.to_datetime(df["fecha"])
             df["fecha"] = df["fecha"].dt.tz_localize(None)
+        _data_source = "supabase"
         _global_df = df
         return df
 
@@ -130,11 +132,13 @@ def get_data():
                 on_bad_lines="skip",
                 encoding="latin-1",
             )
+        _data_source = "csv"
     else:
         from data_generator import generar_dataset
         df = generar_dataset(fecha_inicio_str="2022-01-01", fecha_fin_str="2024-12-31")
         os.makedirs(os.path.dirname(CSV_RUTA), exist_ok=True)
         df.to_csv(CSV_RUTA, index=False)
+        _data_source = "csv"
 
     # Normalize types and drop malformed rows that can appear in CSV files.
     df = normalizar_lineas(df)
@@ -183,7 +187,8 @@ def get_config():
         "fecha_min": fecha_min,
         "fecha_max": fecha_max,
         "lineas_disp": lineas_disp,
-        "dias_orden": dias_orden
+        "dias_orden": dias_orden,
+        "data_source": _data_source,
     }
 
 @app.post("/api/metrics")
