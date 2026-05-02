@@ -1,6 +1,5 @@
 # Guía rápida para generar `teleferico_lapaz.csv`
 
-Esta guía explica cómo cada integrante del equipo puede generar el archivo CSV localmente.
 
 ## 1) Preparar entorno (una sola vez)
 
