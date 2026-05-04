@@ -15,6 +15,9 @@ function App() {
   const [activeTab, setActiveTab] = useState('map');
   const [cloudStatus, setCloudStatus] = useState(null);
   const [apiLatency, setApiLatency] = useState(0);
+  const [openPanels, setOpenPanels] = useState({
+    resumenCloud: false,
+  });
 
   const escenarios = {
     laboral: {
@@ -86,6 +89,10 @@ function App() {
     }));
   };
 
+  const togglePanel = (key) => {
+    setOpenPanels(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   return (
     <div className="flex">
       <Sidebar config={config} filters={filters} setFilters={setFilters} />
@@ -126,37 +133,38 @@ function App() {
         </section>
 
         <section className="panel cloud-panel">
-          <h3 className="section-title" style={{marginTop: 0}}>Estado Cloud</h3>
-          <div className="cloud-grid">
-            <div><strong>Fuente:</strong> {cloudStatus?.data_source === 'supabase' ? 'Supabase' : 'CSV local'}</div>
-            <div><strong>Total registros:</strong> {(cloudStatus?.total_registros || 0).toLocaleString()}</div>
-            <div><strong>Última fecha:</strong> {cloudStatus?.ultima_fecha || '—'}</div>
-            <div><strong>Tiempo respuesta API:</strong> {apiLatency || cloudStatus?._latency_ms || 0} ms</div>
-          </div>
-        </section>
+          <button className="collapse-btn" onClick={() => togglePanel('resumenCloud')}>
+            Resumen Cloud y Demo {openPanels.resumenCloud ? '▾' : '▸'}
+          </button>
+          {openPanels.resumenCloud && (
+            <>
+              <h3 className="section-title" style={{marginTop: '0.9rem'}}>Estado Cloud</h3>
+              <div className="cloud-grid">
+                <div><strong>Fuente:</strong> {cloudStatus?.data_source === 'supabase' ? 'Supabase' : 'CSV local'}</div>
+                <div><strong>Total registros:</strong> {(cloudStatus?.total_registros || 0).toLocaleString()}</div>
+                <div><strong>Última fecha:</strong> {cloudStatus?.ultima_fecha || '—'}</div>
+                <div><strong>Tiempo respuesta API:</strong> {apiLatency || cloudStatus?._latency_ms || 0} ms</div>
+              </div>
 
-        <section className="panel cloud-panel">
-          <h3 className="section-title" style={{marginTop: 0}}>KPI de cobertura</h3>
-          <div className="cloud-grid">
-            <div><strong>Rango analizado:</strong> {rangoDias} días</div>
-            <div><strong>N° líneas activas:</strong> {(metrics.lineas_activas || 0).toLocaleString()}</div>
-            <div><strong>N° estaciones:</strong> {(metrics.estaciones_activas || 0).toLocaleString()}</div>
-            <div><strong>Registros filtrados:</strong> {(metrics.registros_filtrados || 0).toLocaleString()}</div>
-          </div>
-        </section>
+              <h3 className="section-title">KPI de cobertura</h3>
+              <div className="cloud-grid">
+                <div><strong>Rango analizado:</strong> {rangoDias} días</div>
+                <div><strong>N° líneas activas:</strong> {(metrics.lineas_activas || 0).toLocaleString()}</div>
+                <div><strong>N° estaciones:</strong> {(metrics.estaciones_activas || 0).toLocaleString()}</div>
+                <div><strong>Registros filtrados:</strong> {(metrics.registros_filtrados || 0).toLocaleString()}</div>
+              </div>
 
-        <section className="panel cloud-panel">
-          <h3 className="section-title" style={{marginTop: 0}}>Narrativa automática</h3>
-          <p className="narrative-text">{narrativa}</p>
-        </section>
+              <h3 className="section-title">Narrativa automática</h3>
+              <p className="narrative-text">{narrativa}</p>
 
-        <section className="panel cloud-panel">
-          <h3 className="section-title" style={{marginTop: 0}}>Modo demo</h3>
-          <div className="demo-buttons">
-            <button className="btn" onClick={() => aplicarEscenario('laboral')}>{escenarios.laboral.label}</button>
-            <button className="btn" onClick={() => aplicarEscenario('finde')}>{escenarios.finde.label}</button>
-            <button className="btn" onClick={() => aplicarEscenario('saturada')}>{escenarios.saturada.label}</button>
-          </div>
+              <h3 className="section-title">Modo demo</h3>
+              <div className="demo-buttons">
+                <button className="btn" onClick={() => aplicarEscenario('laboral')}>{escenarios.laboral.label}</button>
+                <button className="btn" onClick={() => aplicarEscenario('finde')}>{escenarios.finde.label}</button>
+                <button className="btn" onClick={() => aplicarEscenario('saturada')}>{escenarios.saturada.label}</button>
+              </div>
+            </>
+          )}
         </section>
 
         <div className="tabs-container">

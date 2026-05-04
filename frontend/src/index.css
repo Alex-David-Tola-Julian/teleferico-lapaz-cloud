@@ -294,6 +294,24 @@ html, body {
   flex-wrap: wrap;
 }
 
+.collapse-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--primary);
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.collapse-btn:hover {
+  border-color: var(--primary);
+  background: rgba(0,180,255,0.08);
+}
+
 input[type="date"], input[type="range"] {
   width: 100%;
   background: #0A0E1A;
