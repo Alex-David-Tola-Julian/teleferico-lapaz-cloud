@@ -1,5 +1,5 @@
 # AGENTS
-
+# A
 ## Estructura del repo (entrypoints reales)
 - El entrypoint del backend es `api.py` (objeto FastAPI: `app`).
 - El entrypoint del frontend es `frontend/src/main.jsx` (Vite + React).
