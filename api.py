@@ -191,11 +191,30 @@ def get_config():
         "data_source": _data_source,
     }
 
+@app.get("/api/cloud-status")
+def get_cloud_status():
+    df = get_data()
+    return {
+        "data_source": _data_source,
+        "total_registros": int(len(df)),
+        "ultima_fecha": df["fecha"].max().date().isoformat() if not df.empty else None,
+        "total_lineas": int(df["linea"].nunique()) if "linea" in df.columns else 0,
+        "total_estaciones": int(df["estacion"].nunique()) if "estacion" in df.columns else 0,
+    }
+
 @app.post("/api/metrics")
 def get_metrics(params: FilterParams):
     dff = filter_data(params)
     if dff.empty:
-        return {"total_pax": 0, "prom_diario": 0, "sat_prom": 0, "linea_top": "—"}
+        return {
+            "total_pax": 0,
+            "prom_diario": 0,
+            "sat_prom": 0,
+            "linea_top": "—",
+            "registros_filtrados": 0,
+            "lineas_activas": 0,
+            "estaciones_activas": 0,
+        }
 
     total_pax = int(dff["pasajeros"].sum())
     prom_diario = float(dff.groupby("fecha")["pasajeros"].sum().mean())
@@ -206,7 +225,10 @@ def get_metrics(params: FilterParams):
         "total_pax": total_pax,
         "prom_diario": prom_diario,
         "sat_prom": sat_prom,
-        "linea_top": linea_top
+        "linea_top": linea_top,
+        "registros_filtrados": int(len(dff)),
+        "lineas_activas": int(dff["linea"].nunique()),
+        "estaciones_activas": int(dff["estacion"].nunique()),
     }
 
 @app.post("/api/map")

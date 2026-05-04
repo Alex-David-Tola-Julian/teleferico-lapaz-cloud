@@ -270,6 +270,30 @@ html, body {
   background: rgba(0,180,255,0.2);
 }
 
+.cloud-panel {
+  margin-bottom: 1rem;
+}
+
+.cloud-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+  color: var(--text-light);
+  font-size: 0.92rem;
+}
+
+.narrative-text {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.demo-buttons {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
 input[type="date"], input[type="range"] {
   width: 100%;
   background: #0A0E1A;

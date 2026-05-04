@@ -5,8 +5,15 @@ const api = axios.create({
 });
 
 export const getConfig = async () => {
+  const start = performance.now();
   const res = await api.get('/config');
-  return res.data;
+  return { ...res.data, _latency_ms: Math.round(performance.now() - start) };
+};
+
+export const getCloudStatus = async () => {
+  const start = performance.now();
+  const res = await api.get('/cloud-status');
+  return { ...res.data, _latency_ms: Math.round(performance.now() - start) };
 };
 
 export const getMetrics = async (filters) => {

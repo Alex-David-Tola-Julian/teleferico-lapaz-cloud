@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Map, Clock, Activity, TrendingUp, Award } from 'lucide-react';
-import { getConfig, getMetrics } from './api';
+import { getConfig, getMetrics, getCloudStatus } from './api';
 import MapView from './components/MapView';
 import TemporalView from './components/TemporalView';
 import HeatmapView from './components/HeatmapView';
@@ -13,9 +13,33 @@ function App() {
   const [filters, setFilters] = useState(null);
   const [metrics, setMetrics] = useState({ total_pax: 0, prom_diario: 0, sat_prom: 0, linea_top: '—' });
   const [activeTab, setActiveTab] = useState('map');
+  const [cloudStatus, setCloudStatus] = useState(null);
+  const [apiLatency, setApiLatency] = useState(0);
+
+  const escenarios = {
+    laboral: {
+      label: 'Hora pico laboral',
+      hora_min: 7,
+      hora_max: 9,
+      dias_semana: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'],
+    },
+    finde: {
+      label: 'Fin de semana',
+      hora_min: 10,
+      hora_max: 20,
+      dias_semana: ['Sábado', 'Domingo'],
+    },
+    saturada: {
+      label: 'Línea más saturada',
+      hora_min: 6,
+      hora_max: 21,
+      dias_semana: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
+    },
+  };
 
   useEffect(() => {
     getConfig().then(data => {
+      setApiLatency(data._latency_ms || 0);
       setConfig(data);
       // Default filters
       const endDate = new Date(data.fecha_max);
@@ -31,6 +55,8 @@ function App() {
         dias_semana: data.dias_orden
       });
     }).catch(e => console.error("Error loading config", e));
+
+    getCloudStatus().then(setCloudStatus).catch(e => console.error('Error loading cloud status', e));
   }, []);
 
   useEffect(() => {
@@ -40,6 +66,25 @@ function App() {
   }, [filters]);
 
   if (!config || !filters) return <div style={{padding: '2rem', color: '#E8EAF0'}}>Cargando...</div>;
+
+  const fechaInicio = new Date(filters.fecha_inicio);
+  const fechaFin = new Date(filters.fecha_fin);
+  const rangoDias = Math.max(1, Math.round((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24)) + 1);
+  const narrativa = metrics.registros_filtrados > 0
+    ? `Pico estimado en ${metrics.linea_top} con ${metrics.sat_prom.toFixed(1)}% de saturación promedio en ${metrics.registros_filtrados.toLocaleString()} registros filtrados.`
+    : 'No hay datos para los filtros actuales. Ajusta fechas, líneas u horarios para detectar picos de demanda.';
+
+  const aplicarEscenario = (key) => {
+    const esc = escenarios[key];
+    if (!esc) return;
+    setFilters(prev => ({
+      ...prev,
+      hora_min: esc.hora_min,
+      hora_max: esc.hora_max,
+      dias_semana: esc.dias_semana,
+      lineas: key === 'saturada' && metrics.linea_top !== '—' ? [metrics.linea_top] : config.lineas_disp,
+    }));
+  };
 
   return (
     <div className="flex">
@@ -77,6 +122,40 @@ function App() {
             <p className="metric-value" style={{fontSize: '1.5rem'}}>{metrics.linea_top}</p>
             <p className="metric-label">Línea Más Demandada</p>
             <p className="metric-delta">mayor flujo de pasajeros</p>
+          </div>
+        </section>
+
+        <section className="panel cloud-panel">
+          <h3 className="section-title" style={{marginTop: 0}}>Estado Cloud</h3>
+          <div className="cloud-grid">
+            <div><strong>Fuente:</strong> {cloudStatus?.data_source === 'supabase' ? 'Supabase' : 'CSV local'}</div>
+            <div><strong>Total registros:</strong> {(cloudStatus?.total_registros || 0).toLocaleString()}</div>
+            <div><strong>Última fecha:</strong> {cloudStatus?.ultima_fecha || '—'}</div>
+            <div><strong>Tiempo respuesta API:</strong> {apiLatency || cloudStatus?._latency_ms || 0} ms</div>
+          </div>
+        </section>
+
+        <section className="panel cloud-panel">
+          <h3 className="section-title" style={{marginTop: 0}}>KPI de cobertura</h3>
+          <div className="cloud-grid">
+            <div><strong>Rango analizado:</strong> {rangoDias} días</div>
+            <div><strong>N° líneas activas:</strong> {(metrics.lineas_activas || 0).toLocaleString()}</div>
+            <div><strong>N° estaciones:</strong> {(metrics.estaciones_activas || 0).toLocaleString()}</div>
+            <div><strong>Registros filtrados:</strong> {(metrics.registros_filtrados || 0).toLocaleString()}</div>
+          </div>
+        </section>
+
+        <section className="panel cloud-panel">
+          <h3 className="section-title" style={{marginTop: 0}}>Narrativa automática</h3>
+          <p className="narrative-text">{narrativa}</p>
+        </section>
+
+        <section className="panel cloud-panel">
+          <h3 className="section-title" style={{marginTop: 0}}>Modo demo</h3>
+          <div className="demo-buttons">
+            <button className="btn" onClick={() => aplicarEscenario('laboral')}>{escenarios.laboral.label}</button>
+            <button className="btn" onClick={() => aplicarEscenario('finde')}>{escenarios.finde.label}</button>
+            <button className="btn" onClick={() => aplicarEscenario('saturada')}>{escenarios.saturada.label}</button>
           </div>
         </section>
 
