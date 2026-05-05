@@ -6,6 +6,7 @@ import pandas as pd
 
 from app.schemas.teleferico import FilterParams, PredictParams
 from app.services.data_service import get_data, filter_data, get_data_source, LINEAS_OFICIALES
+from app.services.ml_service import generar_prediccion
 
 router = APIRouter(prefix="/api")
 
@@ -149,69 +150,4 @@ def get_ranking(params: FilterParams):
 @router.post("/predict")
 def get_prediction(params: PredictParams):
     dff = filter_data(params.filters)
-    df_pred_base = dff[dff["linea"] == params.linea].groupby("fecha")["pasajeros"].sum().reset_index()
-    df_pred_base.columns = ["ds", "y"]
-    df_pred_base = df_pred_base.sort_values("ds")
-
-    if len(df_pred_base) < 10:
-        return {"error": "No hay suficientes datos para predecir."}
-
-    try:
-        from prophet import Prophet
-        model = Prophet(
-            seasonality_mode="multiplicative",
-            weekly_seasonality=True,
-            daily_seasonality=False,
-            yearly_seasonality=False,
-            changepoint_prior_scale=0.1,
-        )
-        model.fit(df_pred_base)
-        future = model.make_future_dataframe(periods=params.dias_pred)
-        forecast = model.predict(future)
-
-        future_only = forecast[forecast["ds"] > df_pred_base["ds"].max()]
-
-        history = df_pred_base.rename(columns={"ds": "fecha", "y": "pasajeros"}).copy()
-        history["fecha"] = history["fecha"].dt.strftime("%Y-%m-%d")
-
-        prediction = future_only[["ds", "yhat", "yhat_lower", "yhat_upper"]].copy()
-        prediction["ds"] = prediction["ds"].dt.strftime("%Y-%m-%d")
-
-        return {
-            "history": history.to_dict(orient="records"),
-            "prediction": prediction.rename(columns={"ds": "fecha"}).to_dict(orient="records"),
-            "kpi": {
-                "total": float(future_only["yhat"].sum()),
-                "promedio": float(future_only["yhat"].mean()),
-                "pico": float(future_only["yhat"].max())
-            },
-            "method": "prophet"
-        }
-
-    except ImportError:
-        from sklearn.linear_model import LinearRegression
-
-        df_pred_base["t"] = np.arange(len(df_pred_base))
-        X = df_pred_base[["t"]]
-        y = df_pred_base["y"]
-        reg = LinearRegression().fit(X, y)
-
-        fut_t = np.arange(len(df_pred_base), len(df_pred_base) + params.dias_pred)
-        fut_dates = [df_pred_base["ds"].max() + timedelta(days=i+1) for i in range(params.dias_pred)]
-        fut_y = reg.predict(fut_t.reshape(-1,1))
-
-        history = df_pred_base.rename(columns={"ds": "fecha", "y": "pasajeros"}).copy()
-        history["fecha"] = history["fecha"].dt.strftime("%Y-%m-%d")
-
-        prediction = [{"fecha": fut_dates[i].strftime("%Y-%m-%d"), "yhat": float(fut_y[i])} for i in range(len(fut_dates))]
-
-        return {
-            "history": history.to_dict(orient="records"),
-            "prediction": prediction,
-            "kpi": {
-                "total": float(sum(fut_y)),
-                "promedio": float(np.mean(fut_y)),
-                "pico": float(np.max(fut_y))
-            },
-            "method": "linear"
-        }
+    return generar_prediccion(dff, params.linea, params.dias_pred)
