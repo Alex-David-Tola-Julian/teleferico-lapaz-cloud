@@ -41,65 +41,67 @@ for anio_data in PASAJEROS_REALES_INE.values():
 
 # ─── Configuración de líneas del teleférico ───────────────────────────────────
 LINEAS = {
-    "Roja":     {"capacidad_hora": 3200, "estaciones": ["Terminal Rojo Sur", "Parque Urbano", "Pura Pura", "Ceja El Alto Norte"], "color": "#E63946"},
-    "Amarilla": {"capacidad_hora": 2800, "estaciones": ["Armonia", "Ciudad Satélite", "16 de Julio", "Villa Adela"], "color": "#FFB703"},
-    "Verde":    {"capacidad_hora": 3000, "estaciones": ["San Jorge", "Sopocachi", "Belén", "Achumani"], "color": "#2DC653"},
-    "Azul":     {"capacidad_hora": 2600, "estaciones": ["Cementerio", "Garita de Lima", "Periférica", "Villa Fátima"], "color": "#0077B6"},
-    "Naranja":  {"capacidad_hora": 2400, "estaciones": ["Senkata", "El Alto Centro", "Mercado Rodríguez", "Obrajes"], "color": "#FB8500"},
-    "Celeste":  {"capacidad_hora": 2200, "estaciones": ["Qhana Punita", "Rosas Pampa", "5 Esquinas", "Miraflores"], "color": "#48CAE4"},
-    "Blanca":   {"capacidad_hora": 2000, "estaciones": ["Jupapina", "Cota Cota", "Irpavi", "Pedregal"], "color": "#F1FAEE"},
-    "Café":     {"capacidad_hora": 1800, "estaciones": ["Terminal Sur Café", "Villarroel", "Miraflores Café", "Triangulo"], "color": "#8B5E3C"},
-    "Plateada": {"capacidad_hora": 3400, "estaciones": ["El Alto Sur", "Senkata Plateada", "Los Andes", "La Ceja"], "color": "#ADB5BD"},
+    "Roja":     {"capacidad_hora": 3200, "estaciones": ["Taypi Uta (Estación Central)", "Ajayuni (Cementerio)", "Jach'a Qhathu (16 de Julio)"], "color": "#E63946"},
+    "Amarilla": {"capacidad_hora": 2800, "estaciones": ["Chuqui Apu (Libertador)", "Qhana Pata (Mirador)", "Tupa Katari (Quta Uma)", "Phuna Wiña (Ciudad Satélite)"], "color": "#FFB703"},
+    "Verde":    {"capacidad_hora": 3000, "estaciones": ["Libertador (Curva de Holguín)", "Irpawi (Obrajes)", "Ainawi (Bolognia)", "Taypi Uta (Irpawi)"], "color": "#2DC653"},
+    "Azul":     {"capacidad_hora": 2600, "estaciones": ["Jach'a Qhathu (16 de Julio)", "Qhana Taki (Plaza Libertad)", "Suma Qamaña (Plaza La Paz)", "Yatiña Uta (UPEA)", "Waña Jawira (Ex Tranca Río Seco)"], "color": "#0077B6"},
+    "Naranja":  {"capacidad_hora": 2400, "estaciones": ["Taypi Uta (Central)", "Ríosinho (Armentia)", "Apumayu (Periférica)", "Villarroel (Plaza Villarroel)"], "color": "#FB8500"},
+    "Celeste":  {"capacidad_hora": 2200, "estaciones": ["Chuqui Apu (Libertador)", "Jalsuri (Av. del Poeta)", "Prado (Teatro al Aire Libre)", "Camacho (Prado)"], "color": "#48CAE4"},
+    "Blanca":   {"capacidad_hora": 2000, "estaciones": ["Villarroel (Plaza Villarroel)", "Inalmama (Monumento Busch)", "Qhuyana (Plaza Triangular)", "Jalsuri (Av. del Poeta)"], "color": "#F1FAEE"},
+    "Café":     {"capacidad_hora": 1800, "estaciones": ["Inalmama (Monumento Busch)", "Las Villas (Villa Copacabana / San Antonio)"], "color": "#8B5E3C"},
+    "Plateada": {"capacidad_hora": 3400, "estaciones": ["Jach'a Qhathu (16 de Julio)", "Faro Murillo", "Ciudad Satélite"], "color": "#ADB5BD"},
     "Dorada":   {"capacidad_hora": 3100, "estaciones": ["Terminal Dorada", "Río Seco", "Ciudad del Niño", "Garita"], "color": "#D4AF37"},
-    "Morada":   {"capacidad_hora": 2900, "estaciones": ["Morada Sur", "Pampahasi", "Alto Obrajes", "Morada Norte"], "color": "#7209B7"},
+    "Morada":   {"capacidad_hora": 2900, "estaciones": ["Utjawi (Edificio Correos)", "Tarija (Faro Murillo)", "Jach'a Thaki (6 de Marzo)"], "color": "#7209B7"},
 }
 
 # Coordenadas reales aproximadas de La Paz / El Alto para el mapa
 COORDENADAS_ESTACIONES = {
-    "Terminal Rojo Sur":   (-16.530, -68.119),
-    "Parque Urbano":       (-16.520, -68.115),
-    "Pura Pura":           (-16.504, -68.113),
-    "Ceja El Alto Norte":  (-16.497, -68.115),
-    "Armonia":             (-16.508, -68.131),
-    "Ciudad Satélite":     (-16.503, -68.138),
-    "16 de Julio":         (-16.499, -68.143),
-    "Villa Adela":         (-16.494, -68.148),
-    "San Jorge":           (-16.507, -68.123),
-    "Sopocachi":           (-16.513, -68.127),
-    "Belén":               (-16.520, -68.130),
-    "Achumani":            (-16.535, -68.125),
-    "Cementerio":          (-16.490, -68.120),
-    "Garita de Lima":      (-16.495, -68.118),
-    "Periférica":          (-16.500, -68.116),
-    "Villa Fátima":        (-16.505, -68.114),
-    "Senkata":             (-16.478, -68.154),
-    "El Alto Centro":      (-16.485, -68.148),
-    "Mercado Rodríguez":   (-16.497, -68.136),
-    "Obrajes":             (-16.530, -68.115),
-    "Qhana Punita":        (-16.472, -68.165),
-    "Rosas Pampa":         (-16.480, -68.158),
-    "5 Esquinas":          (-16.493, -68.142),
-    "Miraflores":          (-16.508, -68.110),
-    "Jupapina":            (-16.550, -68.105),
-    "Cota Cota":           (-16.542, -68.108),
-    "Irpavi":              (-16.535, -68.112),
-    "Pedregal":            (-16.528, -68.118),
-    "Terminal Sur Café":   (-16.555, -68.101),
-    "Villarroel":          (-16.545, -68.104),
-    "Miraflores Café":     (-16.510, -68.109),
-    "Triangulo":           (-16.502, -68.107),
-    "El Alto Sur":         (-16.490, -68.145),
-    "Senkata Plateada":    (-16.480, -68.150),
-    "Los Andes":           (-16.474, -68.156),
-    "La Ceja":             (-16.501, -68.133),
-    "Terminal Dorada":     (-16.465, -68.170),
-    "Río Seco":            (-16.470, -68.162),
-    "Ciudad del Niño":     (-16.475, -68.155),
-    "Garita":              (-16.483, -68.147),
-    "Morada Sur":          (-16.538, -68.108),
-    "Pampahasi":           (-16.525, -68.106),
-    "Alto Obrajes":        (-16.518, -68.110),
-    "Morada Norte":        (-16.510, -68.112),
+    # Roja
+    "Taypi Uta (Estación Central)": (-16.4913, -68.1384),
+    "Ajayuni (Cementerio)": (-16.4958, -68.1491),
+    "Jach'a Qhathu (16 de Julio)": (-16.4908, -68.1633),
+    # Amarilla
+    "Chuqui Apu (Libertador)": (-16.5292, -68.1189),
+    "Qhana Pata (Mirador)": (-16.5130, -68.1302),
+    "Tupa Katari (Quta Uma)": (-16.5134, -68.1403),
+    "Phuna Wiña (Ciudad Satélite)": (-16.5166, -68.1554),
+    # Verde
+    "Libertador (Curva de Holguín)": (-16.5292, -68.1189),
+    "Irpawi (Obrajes)": (-16.5299, -68.1114),
+    "Ainawi (Bolognia)": (-16.5375, -68.1065),
+    "Taypi Uta (Irpawi)": (-16.5381, -68.0877),
+    # Azul
+    "Qhana Taki (Plaza Libertad)": (-16.4950, -68.1680),
+    "Suma Qamaña (Plaza La Paz)": (-16.4990, -68.1720),
+    "Yatiña Uta (UPEA)": (-16.4938, -68.1932),
+    "Waña Jawira (Ex Tranca Río Seco)": (-16.4862, -68.2045),
+    # Naranja
+    "Taypi Uta (Central)": (-16.4913, -68.1384),
+    "Ríosinho (Armentia)": (-16.4916, -68.1293),
+    "Apumayu (Periférica)": (-16.4880, -68.1250),
+    "Villarroel (Plaza Villarroel)": (-16.4965, -68.1182),
+    # Celeste
+    "Jalsuri (Av. del Poeta)": (-16.5147, -68.1261),
+    "Prado (Teatro al Aire Libre)": (-16.5050, -68.1300),
+    "Camacho (Prado)": (-16.5029, -68.1331),
+    # Blanca
+    "Inalmama (Monumento Busch)": (-16.5022, -68.1170),
+    "Qhuyana (Plaza Triangular)": (-16.5065, -68.1189),
+    # Café
+    "Las Villas (Villa Copacabana / San Antonio)": (-16.4950, -68.1080),
+    # Plateada
+    "Faro Murillo": (-16.5136, -68.1652),
+    "Ciudad Satélite": (-16.5166, -68.1554),
+    # Morada
+    "Utjawi (Edificio Correos)": (-16.5020, -68.1350),
+    "Tarija (Faro Murillo)": (-16.5136, -68.1652),
+    "Jach'a Thaki (6 de Marzo)": (-16.5050, -68.1666),
+    
+    # Dorada (mantenida por retrocompatibilidad del dict simulado)
+    "Terminal Dorada": (-16.4800, -68.1400),
+    "Río Seco": (-16.4862, -68.2045),
+    "Ciudad del Niño": (-16.4900, -68.1300),
+    "Garita": (-16.4950, -68.1350)
 }
 
 
