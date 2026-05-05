@@ -30,7 +30,7 @@ jobs:
       - name: Smoke Test (Verificar imports de FastAPI)
         # Verifica que la API carga correctamente sin errores de sintaxis
         run: |
-          python -c "from app.main import app; print('✅ El backend compila e importa correctamente')"
+          python -c "from api import app; print('✅ El backend compila e importa correctamente')"
           
       - name: Ejecutar pruebas (Pytest)
         run: |
