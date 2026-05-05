@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
+import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Map, Clock, Activity, TrendingUp, Award } from 'lucide-react';
 import { getConfig, getMetrics, getCloudStatus } from './api';
 import MapView from './components/MapView';
@@ -9,66 +11,50 @@ import RankingView from './components/RankingView';
 import Sidebar from './components/Sidebar';
 
 function App() {
-  const [config, setConfig] = useState(null);
   const [filters, setFilters] = useState(null);
-  const [metrics, setMetrics] = useState({ total_pax: 0, prom_diario: 0, sat_prom: 0, linea_top: '—' });
-  const [activeTab, setActiveTab] = useState('map');
-  const [cloudStatus, setCloudStatus] = useState(null);
-  const [apiLatency, setApiLatency] = useState(0);
-  const [openPanels, setOpenPanels] = useState({
-    resumenCloud: false,
-  });
+  const [openPanels, setOpenPanels] = useState({ resumenCloud: false });
+
+  const location = useLocation();
 
   const escenarios = {
-    laboral: {
-      label: 'Hora pico laboral',
-      hora_min: 7,
-      hora_max: 9,
-      dias_semana: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'],
-    },
-    finde: {
-      label: 'Fin de semana',
-      hora_min: 10,
-      hora_max: 20,
-      dias_semana: ['Sábado', 'Domingo'],
-    },
-    saturada: {
-      label: 'Línea más saturada',
-      hora_min: 6,
-      hora_max: 21,
-      dias_semana: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-    },
+    laboral: { label: 'Hora pico laboral', hora_min: 7, hora_max: 9, dias_semana: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'] },
+    finde: { label: 'Fin de semana', hora_min: 10, hora_max: 20, dias_semana: ['Sábado', 'Domingo'] },
+    saturada: { label: 'Línea más saturada', hora_min: 6, hora_max: 21, dias_semana: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] },
   };
 
+  const { data: config, isLoading: isLoadingConfig } = useQuery({
+    queryKey: ['config'],
+    queryFn: getConfig,
+  });
+
+  const { data: cloudStatus } = useQuery({
+    queryKey: ['cloudStatus'],
+    queryFn: getCloudStatus,
+  });
+
+  const { data: metrics = { total_pax: 0, prom_diario: 0, sat_prom: 0, linea_top: '—', registros_filtrados: 0, lineas_activas: 0, estaciones_activas: 0 } } = useQuery({
+    queryKey: ['metrics', filters],
+    queryFn: () => getMetrics(filters),
+    enabled: !!filters,
+  });
+
   useEffect(() => {
-    getConfig().then(data => {
-      setApiLatency(data._latency_ms || 0);
-      setConfig(data);
-      // Default filters
-      const endDate = new Date(data.fecha_max);
+    if (config && !filters) {
+      const endDate = new Date(config.fecha_max);
       const startDate = new Date(endDate);
       startDate.setDate(startDate.getDate() - 30);
-      
       setFilters({
         fecha_inicio: startDate.toISOString().split('T')[0],
-        fecha_fin: data.fecha_max,
-        lineas: data.lineas_disp,
+        fecha_fin: config.fecha_max,
+        lineas: config.lineas_disp,
         hora_min: 5,
         hora_max: 22,
-        dias_semana: data.dias_orden
+        dias_semana: config.dias_orden
       });
-    }).catch(e => console.error("Error loading config", e));
-
-    getCloudStatus().then(setCloudStatus).catch(e => console.error('Error loading cloud status', e));
-  }, []);
-
-  useEffect(() => {
-    if (filters) {
-      getMetrics(filters).then(setMetrics).catch(e => console.error("Error loading metrics", e));
     }
-  }, [filters]);
+  }, [config, filters]);
 
-  if (!config || !filters) return <div style={{padding: '2rem', color: '#E8EAF0'}}>Cargando...</div>;
+  if (isLoadingConfig || !filters) return <div style={{padding: '2rem', color: '#E8EAF0'}}>Cargando sistema...</div>;
 
   const fechaInicio = new Date(filters.fecha_inicio);
   const fechaFin = new Date(filters.fecha_fin);
@@ -89,20 +75,17 @@ function App() {
     }));
   };
 
-  const togglePanel = (key) => {
-    setOpenPanels(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+  const navLinkClass = ({ isActive }) => `flex items-center gap-4 tab-btn ${isActive ? 'active' : ''}`;
 
   return (
     <div className="flex">
       <Sidebar config={config} filters={filters} setFilters={setFilters} />
-      
       <main className="main-content flex-1">
         <header className="hero-header">
           <h1 className="hero-title">🚡 Mi Teleférico · Análisis de datos</h1>
           <p className="hero-subtitle">Sistema de Monitoreo y Predicción de Pasajeros — La Paz, Bolivia</p>
           <span className="hero-badge">GRUPO 19 · COMPUTACIÓN EN LA NUBE · UMSA 2026</span>
-          <span className={`source-badge ${config.data_source === 'supabase' ? 'supabase' : 'csv'}`}>
+          <span className={`source-badge ${config.data_source === 'supabase' ? 'supabase' : 'csv'}`} >
             {config.data_source === 'supabase' ? 'Usamos Supabase' : 'Usamos datos de CSV'}
           </span>
         </header>
@@ -133,7 +116,7 @@ function App() {
         </section>
 
         <section className="panel cloud-panel">
-          <button className="collapse-btn" onClick={() => togglePanel('resumenCloud')}>
+          <button className="collapse-btn" onClick={() => setOpenPanels(prev => ({ ...prev, resumenCloud: !prev.resumenCloud }))}>
             Resumen Cloud y Demo {openPanels.resumenCloud ? '▾' : '▸'}
           </button>
           {openPanels.resumenCloud && (
@@ -143,9 +126,8 @@ function App() {
                 <div><strong>Fuente:</strong> {cloudStatus?.data_source === 'supabase' ? 'Supabase' : 'CSV local'}</div>
                 <div><strong>Total registros:</strong> {(cloudStatus?.total_registros || 0).toLocaleString()}</div>
                 <div><strong>Última fecha:</strong> {cloudStatus?.ultima_fecha || '—'}</div>
-                <div><strong>Tiempo respuesta API:</strong> {apiLatency || cloudStatus?._latency_ms || 0} ms</div>
+                <div><strong>Tiempo respuesta API:</strong> {config._latency_ms || cloudStatus?._latency_ms || 0} ms</div>
               </div>
-
               <h3 className="section-title">KPI de cobertura</h3>
               <div className="cloud-grid">
                 <div><strong>Rango analizado:</strong> {rangoDias} días</div>
@@ -153,34 +135,28 @@ function App() {
                 <div><strong>N° estaciones:</strong> {(metrics.estaciones_activas || 0).toLocaleString()}</div>
                 <div><strong>Registros filtrados:</strong> {(metrics.registros_filtrados || 0).toLocaleString()}</div>
               </div>
-
-              <h3 className="section-title">Narrativa automática</h3>
-              <p className="narrative-text">{narrativa}</p>
-
-              <h3 className="section-title">Modo demo</h3>
-              <div className="demo-buttons">
-                <button className="btn" onClick={() => aplicarEscenario('laboral')}>{escenarios.laboral.label}</button>
-                <button className="btn" onClick={() => aplicarEscenario('finde')}>{escenarios.finde.label}</button>
-                <button className="btn" onClick={() => aplicarEscenario('saturada')}>{escenarios.saturada.label}</button>
-              </div>
             </>
           )}
         </section>
 
         <div className="tabs-container">
-          <button className={`flex items-center gap-4 tab-btn ${activeTab === 'map' ? 'active' : ''}`} onClick={() => setActiveTab('map')}><Map size={18}/> Mapa Interactivo</button>
-          <button className={`flex items-center gap-4 tab-btn ${activeTab === 'temporal' ? 'active' : ''}`} onClick={() => setActiveTab('temporal')}><TrendingUp size={18}/> Análisis Temporal</button>
-          <button className={`flex items-center gap-4 tab-btn ${activeTab === 'heatmap' ? 'active' : ''}`} onClick={() => setActiveTab('heatmap')}><Activity size={18}/> Heatmap de Demanda</button>
-          <button className={`flex items-center gap-4 tab-btn ${activeTab === 'predict' ? 'active' : ''}`} onClick={() => setActiveTab('predict')}><Clock size={18}/> Predicción</button>
-          <button className={`flex items-center gap-4 tab-btn ${activeTab === 'ranking' ? 'active' : ''}`} onClick={() => setActiveTab('ranking')}><Award size={18}/> Ranking Estaciones</button>
+          <NavLink to="/mapa" className={navLinkClass}><Map size={18}/> Mapa Interactivo</NavLink>
+          <NavLink to="/temporal" className={navLinkClass}><TrendingUp size={18}/> Análisis Temporal</NavLink>
+          <NavLink to="/heatmap" className={navLinkClass}><Activity size={18}/> Heatmap de Demanda</NavLink>
+          <NavLink to="/predicciones" className={navLinkClass}><Clock size={18}/> Predicción</NavLink>
+          <NavLink to="/ranking" className={navLinkClass}><Award size={18}/> Ranking Estaciones</NavLink>
         </div>
 
         <div className="tab-content">
-          {activeTab === 'map' && <MapView filters={filters} config={config} />}
-          {activeTab === 'temporal' && <TemporalView filters={filters} config={config} />}
-          {activeTab === 'heatmap' && <HeatmapView filters={filters} config={config} />}
-          {activeTab === 'predict' && <PredictView filters={filters} config={config} />}
-          {activeTab === 'ranking' && <RankingView filters={filters} config={config} />}
+          <Routes>
+            <Route path="/" element={<Navigate to="/mapa" replace />} />
+            <Route path="/mapa" element={<MapView filters={filters} config={config} />} />
+            <Route path="/temporal" element={<TemporalView filters={filters} config={config} />} />
+            <Route path="/heatmap" element={<HeatmapView filters={filters} config={config} />} />
+            <Route path="/predicciones" element={<PredictView filters={filters} config={config} />} />
+            <Route path="/ranking" element={<RankingView filters={filters} config={config} />} />
+            <Route path="*" element={<div>Ruta no encontrada</div>} />
+          </Routes>
         </div>
       </main>
     </div>
