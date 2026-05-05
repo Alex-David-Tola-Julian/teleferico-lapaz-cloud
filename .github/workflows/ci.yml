@@ -32,11 +32,10 @@ jobs:
         run: |
           python -c "from app.main import app; print('✅ El backend compila e importa correctamente')"
           
-      # Nota: Aquí se agregarán los tests (pytest) cuando los implementemos.
-      # - name: Ejecutar pruebas (Pytest)
-      #   run: |
-      #     pip install pytest
-      #     pytest tests/
+      - name: Ejecutar pruebas (Pytest)
+        run: |
+          pip install pytest httpx
+          pytest tests/
 
   # --------------------------------------------------------
   # VALIDACIÓN DEL FRONTEND (Node / React / Vite)
