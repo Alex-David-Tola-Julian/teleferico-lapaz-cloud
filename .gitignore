@@ -26,4 +26,5 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Datasets grandes locales  
+# Datasets grandes locales
+data/teleferico_lapaz.csv

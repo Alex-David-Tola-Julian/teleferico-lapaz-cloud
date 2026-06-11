@@ -1,14 +1,20 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from typing import Optional
 import numpy as np
 from datetime import timedelta
 import pandas as pd
+from pydantic import BaseModel
 
 from app.schemas.teleferico import FilterParams, PredictParams
-from app.services.data_service import get_data, filter_data, get_data_source, LINEAS_OFICIALES
+from app.services.data_service import get_data, filter_data, get_data_source, LINEAS_OFICIALES, registrar_ticket
 from app.services.ml_service import generar_prediccion
 
 router = APIRouter(prefix="/api")
+
+class TicketPayload(BaseModel):
+    linea: str
+    pasajeros: int
+
 
 @router.get("/config")
 def get_config():
@@ -151,3 +157,13 @@ def get_ranking(params: FilterParams):
 def get_prediction(params: PredictParams):
     dff = filter_data(params.filters)
     return generar_prediccion(dff, params.linea, params.dias_pred)
+
+@router.post("/registrar-ticket")
+def post_registrar_ticket(payload: TicketPayload):
+    try:
+        registro = registrar_ticket(payload.linea, payload.pasajeros)
+        return {"ok": True, "registro": registro}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")

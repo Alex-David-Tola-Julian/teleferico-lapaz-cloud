@@ -1,7 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Map, Clock, Activity, TrendingUp, Award } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Map, Clock, Activity, TrendingUp, Award, Ticket } from 'lucide-react';
 import { getConfig, getMetrics, getCloudStatus } from './api';
 import MapView from './components/MapView';
 import TemporalView from './components/TemporalView';
@@ -9,6 +9,7 @@ import HeatmapView from './components/HeatmapView';
 import PredictView from './components/PredictView';
 import RankingView from './components/RankingView';
 import Sidebar from './components/Sidebar';
+import TicketDashboard from './components/TicketDashboard';
 
 function App() {
   const [filters, setFilters] = useState(null);
@@ -138,6 +139,8 @@ function App() {
             </>
           )}
         </section>
+
+        <TicketDashboard onRegistrado={() => {}} />
 
         <div className="tabs-container">
           <NavLink to="/mapa" className={navLinkClass}><Map size={18}/> Mapa Interactivo</NavLink>

@@ -45,3 +45,8 @@ export const getPrediction = async (filters, linea, dias_pred) => {
   const res = await api.post('/predict', { filters, linea, dias_pred });
   return res.data;
 };
+
+export const registrarTicket = async (linea, pasajeros) => {
+  const res = await api.post('/registrar-ticket', { linea, pasajeros });
+  return res.data;
+};
