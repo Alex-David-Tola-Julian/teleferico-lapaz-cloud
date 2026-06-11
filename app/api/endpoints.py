@@ -77,9 +77,11 @@ def get_map_data(params: FilterParams):
     if dff.empty:
         return []
 
-    flujo_est = dff.groupby(["estacion", "linea", "latitud", "longitud"]).agg(
+    flujo_est = dff.groupby(["estacion", "linea"]).agg(
         pasajeros=("pasajeros", "sum"),
-        saturacion=("saturacion", "mean")
+        saturacion=("saturacion", "mean"),
+        latitud=("latitud", "mean"),
+        longitud=("longitud", "mean"),
     ).reset_index()
 
     return flujo_est.to_dict(orient="records")
@@ -166,4 +168,4 @@ def post_registrar_ticket(payload: TicketPayload):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")

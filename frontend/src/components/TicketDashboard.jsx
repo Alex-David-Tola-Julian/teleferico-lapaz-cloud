@@ -45,7 +45,7 @@ export default function TicketDashboard({ onRegistrado }) {
       queryClient.invalidateQueries({ queryKey: ['metrics'] });
       queryClient.invalidateQueries({ queryKey: ['config'] });
       queryClient.invalidateQueries({ queryKey: ['cloudStatus'] });
-      if (onRegistrado) onRegistrado();
+      if (onRegistrado) onRegistrado(res.registro);
       // Resetear estado después de 3s
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setEstado(null), 3500);

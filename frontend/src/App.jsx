@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Map, Clock, Activity, TrendingUp, Award, Ticket } from 'lucide-react';
+import { Map, Clock, Activity, TrendingUp, Award } from 'lucide-react';
 import { getConfig, getMetrics } from './api';
 import MapView from './components/MapView';
 import TemporalView from './components/TemporalView';
@@ -13,8 +13,6 @@ import TicketDashboard from './components/TicketDashboard';
 
 function App() {
   const [filters, setFilters] = useState(null);
-
-  const location = useLocation();
 
   const { data: config, isLoading: isLoadingConfig } = useQuery({
     queryKey: ['config'],
@@ -29,11 +27,8 @@ function App() {
 
   useEffect(() => {
     if (config && !filters) {
-      const endDate = new Date(config.fecha_max);
-      const startDate = new Date(endDate);
-      startDate.setDate(startDate.getDate() - 30);
       setFilters({
-        fecha_inicio: startDate.toISOString().split('T')[0],
+        fecha_inicio: config.fecha_min,
         fecha_fin: config.fecha_max,
         lineas: config.lineas_disp,
         hora_min: 5,
@@ -46,6 +41,19 @@ function App() {
   if (isLoadingConfig || !filters) return <div style={{padding: '2rem', color: '#E8EAF0'}}>Cargando sistema...</div>;
 
   const navLinkClass = ({ isActive }) => `flex items-center gap-4 tab-btn ${isActive ? 'active' : ''}`;
+
+  const handleTicketRegistrado = (registro) => {
+    setFilters(prev => {
+      if (!prev || !config) return prev;
+
+      const fechasFin = [prev.fecha_fin, config.fecha_max, registro?.fecha].filter(Boolean).sort();
+      return {
+        ...prev,
+        fecha_inicio: config.fecha_min,
+        fecha_fin: fechasFin[fechasFin.length - 1],
+      };
+    });
+  };
 
   return (
     <div className="flex">
@@ -85,7 +93,7 @@ function App() {
           </div>
         </section>
 
-        <TicketDashboard onRegistrado={() => {}} />
+        <TicketDashboard onRegistrado={handleTicketRegistrado} />
 
         <div className="tabs-container">
           <NavLink to="/mapa" className={navLinkClass}><Map size={18}/> Mapa Interactivo</NavLink>
