@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Ticket, CheckCircle, AlertCircle, Zap } from 'lucide-react';
+import { Ticket, CheckCircle, AlertCircle } from 'lucide-react';
 import { registrarTicket } from '../api';
 
 const LINEAS = [
@@ -57,19 +57,20 @@ export default function TicketDashboard({ onRegistrado }) {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #0d1b2a 0%, #1a2a3a 100%)',
+      background: '#0d1b2a',
       borderRadius: '16px',
-      border: '1px solid rgba(255,255,255,0.08)',
+      border: '1px solid rgba(122,143,166,0.18)',
       padding: '1.8rem',
       marginBottom: '1.5rem',
     }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.4rem' }}>
         <div style={{
-          background: 'linear-gradient(135deg, #00B4FF, #7B2FBE)',
+          background: 'rgba(122,143,166,0.16)',
+          border: '1px solid rgba(122,143,166,0.22)',
           borderRadius: '10px', padding: '0.5rem', display: 'flex',
         }}>
-          <Ticket size={22} color="#fff" />
+          <Ticket size={22} color="#C9D4E3" />
         </div>
         <div>
           <h2 style={{ margin: 0, color: '#E8EAF0', fontSize: '1.15rem', fontWeight: 700 }}>
@@ -80,8 +81,7 @@ export default function TicketDashboard({ onRegistrado }) {
           </p>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <Zap size={14} color="#FFD700" />
-          <span style={{ color: '#FFD700', fontSize: '0.72rem', fontWeight: 600 }}>LIVE</span>
+          <span style={{ color: '#9AA3B2', fontSize: '0.72rem', fontWeight: 600 }}>EN VIVO</span>
         </div>
       </div>
 
@@ -104,9 +104,7 @@ export default function TicketDashboard({ onRegistrado }) {
               fontWeight: 700,
               fontSize: '0.82rem',
               cursor: 'pointer',
-              transition: 'all 0.18s ease',
-              boxShadow: lineaSeleccionada === l.nombre ? `0 0 12px ${l.color}66` : 'none',
-              transform: lineaSeleccionada === l.nombre ? 'scale(1.06)' : 'scale(1)',
+              transition: 'background 0.18s ease, border-color 0.18s ease, color 0.18s ease',
             }}
           >
             {l.nombre}
@@ -177,9 +175,7 @@ export default function TicketDashboard({ onRegistrado }) {
         style={{
           width: '100%',
           padding: '0.85rem',
-          background: linea
-            ? `linear-gradient(135deg, ${linea.color}, ${linea.color}bb)`
-            : 'linear-gradient(135deg, #00B4FF, #7B2FBE)',
+          background: linea ? linea.color : '#1F6F9D',
           color: linea ? linea.textColor : '#fff',
           border: 'none',
           borderRadius: '10px',
@@ -189,10 +185,9 @@ export default function TicketDashboard({ onRegistrado }) {
           opacity: estado === 'loading' ? 0.7 : 1,
           transition: 'all 0.2s',
           letterSpacing: '0.03em',
-          boxShadow: linea ? `0 4px 20px ${linea.color}55` : '0 4px 20px rgba(0,180,255,0.3)',
         }}
       >
-        {estado === 'loading' ? '⏳ Registrando...' : '🎫 Registrar Ticket'}
+        {estado === 'loading' ? 'Registrando...' : 'Registrar Ticket'}
       </button>
 
       {/* Feedback */}
@@ -206,15 +201,14 @@ export default function TicketDashboard({ onRegistrado }) {
           display: 'flex',
           alignItems: 'flex-start',
           gap: '0.6rem',
-          animation: 'fadeIn 0.3s ease',
         }}>
           <CheckCircle size={20} color="#2DC653" style={{ flexShrink: 0, marginTop: '2px' }} />
           <div>
             <p style={{ margin: 0, color: '#2DC653', fontWeight: 700, fontSize: '0.9rem' }}>
-              ✅ {ultimoRegistro.pasajeros} pasajero{ultimoRegistro.pasajeros > 1 ? 's' : ''} registrado{ultimoRegistro.pasajeros > 1 ? 's' : ''} en Línea {ultimoRegistro.linea}
+              {ultimoRegistro.pasajeros} pasajero{ultimoRegistro.pasajeros > 1 ? 's' : ''} registrado{ultimoRegistro.pasajeros > 1 ? 's' : ''} en Línea {ultimoRegistro.linea}
             </p>
             <p style={{ margin: '0.2rem 0 0', color: '#7A8FA6', fontSize: '0.78rem' }}>
-              📍 {ultimoRegistro.estacion} · {ultimoRegistro.fecha} {String(ultimoRegistro.hora).padStart(2,'0')}:00 · Sat. {ultimoRegistro.saturacion}%
+              {ultimoRegistro.estacion} · {ultimoRegistro.fecha} {String(ultimoRegistro.hora).padStart(2,'0')}:00 · Sat. {ultimoRegistro.saturacion}%
             </p>
           </div>
         </div>
