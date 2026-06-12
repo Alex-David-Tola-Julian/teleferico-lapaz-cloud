@@ -223,6 +223,403 @@ sequenceDiagram
 - Almacena registros de pasajeros en PostgreSQL.
 - Permite consultas SQL y acceso REST.
 
+### Diagrama de Estructura de Carpetas
+
+```mermaid
+graph TB
+    ROOT[teleferico-lapaz-cloud]
+
+    ROOT --> APP[app/]
+    ROOT --> FE[frontend/]
+    ROOT --> DATA[data/]
+    ROOT --> TESTS[tests/]
+    ROOT --> FILES[archivos raíz]
+
+    APP --> API[api/endpoints.py]
+    APP --> MAIN[main.py]
+    APP --> CORE[core/config.py]
+    APP --> SERVICES[services/]
+    APP --> SCHEMAS[schemas/teleferico.py]
+
+    SERVICES --> DS[data_service.py]
+    SERVICES --> ML[ml_service.py]
+
+    FE --> SRC[src/]
+    SRC --> COMP[components/]
+    SRC --> APIJS[api.js]
+    SRC --> APPJSX[App.jsx]
+    SRC --> MAINJSX[main.jsx]
+
+    COMP --> MAPVIEW[MapView.jsx]
+    COMP --> TEMPVIEW[TemporalView.jsx]
+    COMP --> HEATVIEW[HeatmapView.jsx]
+    COMP --> RANKVIEW[RankingView.jsx]
+    COMP --> PREDVIEW[PredictView.jsx]
+    COMP --> TICKVIEW[TicketDashboard.jsx]
+    COMP --> SIDEBAR[Sidebar.jsx]
+
+    FILES --> APIPY[api.py]
+    FILES --> GEN[data_generator.py]
+    FILES --> REQ[requirements.txt]
+    FILES --> ENV[.env]
+    FILES --> CSV[teleferico_lapaz.csv]
+
+    style ROOT fill:#1a1a2e,stroke:#00B4FF,color:#E8EAF0
+    style APP fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style FE fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style DATA fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style TESTS fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style FILES fill:#1a1a2e,stroke:#7209B7,color:#E8EAF0
+```
+
+### Diagrama de Base de Datos (Schema)
+
+```mermaid
+erDiagram
+    TELEFERICO {
+        varchar fecha PK
+        int hora
+        varchar dia_semana
+        varchar linea
+        varchar color_linea
+        varchar estacion
+        float latitud
+        float longitud
+        int pasajeros
+        float saturacion
+        boolean calibrado
+        float factor_escala
+    }
+
+    LINEAS {
+        varchar nombre PK
+        varchar color
+        varchar estaciones[]
+    }
+
+    ESTACIONES {
+        varchar nombre PK
+        varchar linea FK
+        float latitud
+        float longitud
+    }
+
+    LINEAS ||--o{ ESTACIONES : "tiene"
+    ESTACIONES ||--o{ TELEFERICO : "registra"
+```
+
+### Diagrama de Componentes del Frontend
+
+```mermaid
+graph TB
+    subgraph APP["App.jsx — Router Principal"]
+        NAV[Navbar]
+        HERO[Hero Section]
+        TICKET[TicketDashboard]
+    end
+
+    subgraph ROUTES["Rutas"]
+        HOME[/]
+        MAP[/mapa]
+        TEMP[/temporal]
+        HEAT[/heatmap]
+        RANK[/ranking]
+        PRED[/predicciones]
+    end
+
+    subgraph COMPONENTS["Componentes"]
+        MAPC[MapView]
+        TEMPC[TemporalView]
+        HEATC[HeatmapView]
+        RANKC[RankingView]
+        PREDC[PredictView]
+        SIDEBAR[Sidebar]
+    end
+
+    subgraph SHARED["Servicios Compartidos"]
+        API[api.js — Axios]
+        RQ[React Query]
+    end
+
+    NAV --> HOME
+    NAV --> MAP
+    NAV --> TEMP
+    NAV --> HEAT
+    NAV --> RANK
+    NAV --> PRED
+
+    HOME --> HERO
+    HOME --> TICKET
+    MAP --> MAPC
+    TEMP --> TEMPC
+    HEAT --> HEATC
+    RANK --> RANKC
+    PRED --> PREDC
+
+    MAPC --> API
+    TEMPC --> API
+    HEATC --> API
+    RANKC --> API
+    PREDC --> API
+    TICKET --> API
+
+    API --> RQ
+
+    style APP fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style ROUTES fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style COMPONENTS fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style SHARED fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
+
+### Diagrama de Endpoints de la API
+
+```mermaid
+graph LR
+    subgraph GET["GET"]
+        CONFIG[/api/config]
+        CLOUD[/api/cloud-status]
+    end
+
+    subgraph POST["POST"]
+        METRICS[/api/metrics]
+        MAPAPI[/api/map]
+        TEMPAPI[/api/temporal]
+        HEATAPI[/api/heatmap]
+        RANKAPI[/api/ranking]
+        PREDAPI[/api/predict]
+        TICKAPI[/api/registrar-ticket]
+    end
+
+    CONFIG --> |"Configuración general"| FE[Frontend]
+    CLOUD --> |"Estado del sistema"| FE
+    METRICS --> |"Métricas agregadas"| FE
+    MAPAPI --> |"Datos geográficos"| FE
+    TEMPAPI --> |"Análisis temporal"| FE
+    HEATAPI --> |"Heatmap demanda"| FE
+    RANKAPI --> |"Ranking estaciones"| FE
+    PREDAPI --> |"Predicción demanda"| FE
+    TICKAPI --> |"Registrar ticket"| FE
+
+    style GET fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style POST fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+```
+
+### Diagrama de Flujo de Datos del Heatmap
+
+```mermaid
+graph TB
+    CSV[(CSV / Supabase)] --> FILTER[Filtrar por fecha, línea, hora]
+    FILTER --> GROUP[GroupBy día_semana + hora]
+    GROUP --> PIVOT[Pivot Table: días × horas]
+    PIVOT --> Z[Matriz Z de pasajeros promedio]
+    Z --> HEATMAP[Heatmap Plotly]
+    Z --> INSIGHT[Insight: día y hora pico]
+
+    style CSV fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style HEATMAP fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style INSIGHT fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+```
+
+### Diagrama de Flujo del Ranking
+
+```mermaid
+graph TB
+    CSV[(CSV / Supabase)] --> FILTER[Filtrar datos]
+    FILTER --> GROUP[GroupBy estación + línea]
+    GROUP --> SUM[Sumar pasajeros totales]
+    SUM --> SORT[Ordenar de mayor a menor]
+    SORT --> TOP[Top 10 más concurridas]
+    SORT --> BOTTOM[Bottom 10 menos concurridas]
+    TOP --> UI[Mostrar en frontend]
+    BOTTOM --> UI
+
+    style CSV fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style TOP fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style BOTTOM fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
+
+### Diagrama de Predicción con Prophet
+
+```mermaid
+graph TB
+    DATA[Datos históricos] --> TRAIN[Entrenar Prophet]
+    TRAIN --> MODEL[Modelo con estacionalidad semanal]
+    MODEL --> FUTURE[Crear dataframe futuro]
+    FUTURE --> PRED[Predicción yhat]
+    PRED --> UPPER[Intervalo superior yhat_upper]
+    PRED --> LOWER[Intervalo inferior yhat_lower]
+    UPPER --> GRAPH[Gráfica con banda de confianza]
+    LOWER --> GRAPH
+    PRED --> KPI[KPIs: total, promedio, pico]
+
+    style DATA fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style MODEL fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style GRAPH fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style KPI fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
+
+### Diagrama de Despliegue
+
+```mermaid
+graph TB
+    subgraph CLOUD["Nube"]
+        VERCEL[Vercel — Frontend]
+        RENDER[Render / Railway — Backend]
+        SUPABASE[Supabase — PostgreSQL]
+    end
+
+    subgraph LOCAL["Desarrollo Local"]
+        VITE[npm run dev — Vite]
+        UVICORN[uvicorn — FastAPI]
+        CSVLOCAL[(CSV Local)]
+    end
+
+    subgraph DEV["Desarrollador"]
+        PC[PC del desarrollador]
+        VSCODE[VS Code]
+        GITHUB[GitHub]
+    end
+
+    PC --> VSCODE
+    VSCODE --> GITHUB
+    GITHUB --> VERCEL
+    GITHUB --> RENDER
+
+    VERCEL --> |"HTTP requests"| RENDER
+    RENDER --> |"REST API"| SUPABASE
+    RENDER --> |"Lee/escribe"| CSVLOCAL
+
+    UVICORN --> CSVLOCAL
+    VITE --> |"proxy /api"| UVICORN
+
+    style CLOUD fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style LOCAL fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style DEV fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
+
+### Diagrama de Pipeline de Datos
+
+```mermaid
+graph LR
+    A[Fuente INE] --> B[data_generator.py]
+    B --> C[Dataset calibrado]
+    C --> D[CSV teleferico_lapaz.csv]
+    D --> E[upload_to_supabase.py]
+    E --> F[Supabase PostgreSQL]
+    D --> G[FastAPI carga en memoria]
+    F --> G
+    G --> H[Pandas procesa]
+    H --> I[Métricas, Ranking, Heatmap]
+    H --> J[Prophet predice]
+    I --> K[Frontend visualiza]
+    J --> K
+
+    style A fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style C fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style F fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style K fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Diagrama de Interacción del Usuario
+
+```mermaid
+stateDiagram-v2
+    [*] --> Dashboard
+    Dashboard --> Mapa: Click en "Mapa"
+    Dashboard --> Temporal: Click en "Temporal"
+    Dashboard --> Heatmap: Click en "Heatmap"
+    Dashboard --> Ranking: Click en "Ranking"
+    Dashboard --> Prediccion: Click en "Predicción"
+    Dashboard --> Ticket: Click en "Registrar Ticket"
+
+    Mapa --> Dashboard
+    Temporal --> Dashboard
+    Heatmap --> Dashboard
+    Ranking --> Dashboard
+    Prediccion --> Dashboard
+
+    Ticket --> Formulario
+    Formulario --> SeleccionarLínea
+    SeleccionarLínea --> IngresarPasajeros
+    IngresarPasajeros --> Confirmar
+    Confirmar --> Éxito
+    Éxito --> Dashboard
+
+    Prediccion --> SeleccionarLínea2[Seleccionar línea]
+    SeleccionarLínea2 --> DefinirDías[Definir días]
+    DefinirDías --> GráficaPred[Ver gráfica]
+    GráficaPred --> Dashboard
+```
+
+### Diagrama de Comparación: Datos Reales vs Simulados
+
+```mermaid
+graph TB
+    subgraph REAL["Datos Reales INE"]
+        R1[2015: 8.2M pasajeros]
+        R2[2019: 12.5M pasajeros]
+        R3[2024: 15.1M pasajeros]
+    end
+
+    subgraph SIM["Simulación Calibrada"]
+        S1[Factor de escala por año]
+        S2[Distribución horaria]
+        S3[Patrones por línea]
+    end
+
+    subgraph RESULT["Dataset Final"]
+        D1[Registros con fecha/hora]
+        D2[Pasajeros calibrados]
+        D3[Saturación simulada]
+    end
+
+    R1 --> S1
+    R2 --> S1
+    R3 --> S1
+    S1 --> D1
+    S2 --> D2
+    S3 --> D3
+
+    style REAL fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style SIM fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style RESULT fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Diagrama de Seguridad y Variables de Entorno
+
+```mermaid
+graph TB
+    subgraph ENV[".env — Variables sensibles"]
+        URL[SUPABASE_URL]
+        KEY[SUPABASE_ANON_KEY]
+        TABLE[SUPABASE_TABLE]
+    end
+
+    subgraph GITIGNORE[".gitignore"]
+        GI[Excluye .env del repositorio]
+    end
+
+    subgraph CONFIG["config.py — Settings"]
+        CS[Settings class]
+        LOAD[dotenv load]
+    end
+
+    subgraph APP["Aplicación"]
+        API2[FastAPI lee settings]
+        DS2[Data Service usa settings]
+    end
+
+    LOAD --> CS
+    CS --> API2
+    CS --> DS2
+    GI -.-> |"protege"| ENV
+
+    style ENV fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style GITIGNORE fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style CONFIG fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style APP fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+```
+
 ### Flujo de datos
 1. El dataset se genera o carga en el backend.
 2. El frontend solicita datos a la API.
