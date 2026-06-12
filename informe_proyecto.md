@@ -2578,3 +2578,209 @@ graph TB
     style CAPTURAS fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
     style JUSTIFICACIÓN fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
 ```
+
+## XIII. Diagramas de Gestión de Proyecto
+
+### Organigrama del Grupo 19 — Roles y Responsabilidades
+
+```mermaid
+graph TB
+    subgraph EQUIPO["Grupo 19 — Computación en la Nube"]
+        LÍDER["Líder de Proyecto"]
+    end
+
+    subgraph AREAS["Áreas de Trabajo"]
+        BE["Backend Developer"]
+        FE["Frontend Developer"]
+        DA["Data Analyst / ML"]
+        DEVOPS["DevOps / Cloud"]
+    end
+
+    subgraph TAREAS_BE["Tareas del Backend"]
+        T1["Desarrollo de API con FastAPI"]
+        T2["Endpoints REST (metrics, map, ranking)"]
+        T3["Integración con Supabase"]
+        T4["Lógica de tickets"]
+        T5["Manejo de errores y caché"]
+    end
+
+    subgraph TAREAS_FE["Tareas del Frontend"]
+        T6["Dashboard con React + Vite"]
+        T7["Componentes: Mapa, Heatmap, Ranking"]
+        T8["Simulador de Tickets"]
+        T9["Integración con API (Axios)"]
+        T10["Diseño UI/UX"]
+    end
+
+    subgraph TAREAS_DA["Tareas de Datos/ML"]
+        T11["Generación de dataset sintético"]
+        T12["Calibración con datos reales INE"]
+        T13["Modelo de predicción (Prophet)"]
+        T14["Análisis exploratorio de datos"]
+        T15["Documentación técnica"]
+    end
+
+    subgraph TAREAS_DV["Tareas de DevOps/Cloud"]
+        T16["Configuración de Supabase"]
+        T17["Despliegue en Vercel/Render"]
+        T18["Variables de entorno y seguridad"]
+        T19["CI/CD pipeline"]
+        T20["Monitoreo y logs"]
+    end
+
+    LÍDER --> BE
+    LÍDER --> FE
+    LÍDER --> DA
+    LÍDER --> DEVOPS
+
+    BE --> TAREAS_BE
+    FE --> TAREAS_FE
+    DA --> TAREAS_DA
+    DEVOPS --> TAREAS_DV
+
+    style EQUIPO fill:#1a1a2e,stroke:#7209B7,color:#E8EAF0
+    style AREAS fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style TAREAS_BE fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style TAREAS_FE fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style TAREAS_DA fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style TAREAS_DV fill:#2a2a1a,stroke:#7209B7,color:#E8EAF0
+```
+
+### Tabla de Responsabilidades por Miembro
+
+| Área | Responsable | Componentes a cargo | Herramientas |
+|------|------------|---------------------|--------------|
+| **Backend** | Miembro 1 | `app/services/`, `app/api/`, `app/schemas/` | Python, FastAPI, Pandas |
+| **Frontend** | Miembro 2 | `frontend/src/components/`, `App.jsx` | React, Vite, Plotly, Leaflet |
+| **Datos/ML** | Miembro 3 | `data_generator.py`, `ml_service.py` | Prophet, Scikit-learn, Pandas |
+| **DevOps/Cloud** | Miembro 4 | `.env`, `upload_to_supabase.py`, CI/CD | Supabase, Vercel, Render |
+
+### Matriz de Riesgos del Proyecto
+
+```mermaid
+graph TB
+    subgraph ALTO["Riesgo Alto — Impacto Crítico"]
+        R1["Dependencia de Prophet"]
+        R2["Límites de Supabase Free Tier"]
+        R3["Datos simulados vs reales"]
+    end
+
+    subgraph MEDIO["Riesgo Medio — Impacto Moderado"]
+        R4["Render free tier (sleep after 15 min)"]
+        R5["CSV corruption o pérdida de datos"]
+        R6["Cambios en API de Supabase"]
+    end
+
+    subgraph BAJO["Riesgo Bajo — Impacto Menor"]
+        R7["Rendimiento de Plotly con muchos datos"]
+        R8["Incompatibilidad de versiones Node/Python"]
+        R9["Documentación desactualizada"]
+    end
+
+    subgraph MITIGACIONES["Mitigaciones Implementadas"]
+        M1["Fallback a Regresión Lineal si Prophet falla"]
+        M2["CSV local como respaldo cuando Supabase falla"]
+        M3["Caché en memoria para reducir llamadas"]
+        M4["Validación de datos con Pydantic"]
+        M5["Backup automático del CSV"]
+        M6["Variables de entorno para configuración"]
+        M7["Tests automáticos con pytest"]
+        M8["Documentación en README e informe"]
+    end
+
+    R1 --> M1
+    R2 --> M2
+    R3 --> M2
+    R4 --> M3
+    R5 --> M5
+    R6 --> M2
+    R7 --> M3
+    R8 --> M7
+    R9 --> M8
+
+    style ALTO fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style MEDIO fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style BAJO fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style MITIGACIONES fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+```
+
+### Tabla de Matriz de Riesgos
+
+| Riesgo | Probabilidad | Impacto | Nivel | Mitigación |
+|--------|-------------|---------|-------|------------|
+| Prophet no está disponible | Media | Alto | 🔴 Alto | Fallback automático a Regresión Lineal |
+| Supabase free: 500 MB límite | Alta | Alto | 🔴 Alto | Monitoreo de uso + CSV como respaldo |
+| Datos simulados no reflejan realidad | Alta | Alto | 🔴 Alto | Calibración con datos reales INE |
+| Render: servidor se duerme (15 min) | Alta | Medio | 🟡 Medio | Caché en memoria + warmup en request |
+| CSV corrupto o eliminado | Baja | Alto | 🟡 Medio | Regeneración automática con `data_generator` |
+| Cambios en API de Supabase | Baja | Medio | 🟡 Medio | Versión fija de API + fallback a CSV |
+| Plotly lento con miles de registros | Media | Bajo | 🟢 Bajo | Agregación previa en backend |
+| Incompatibilidad Node.js / Python | Baja | Bajo | 🟢 Bajo | Versiones fijas en requirements.txt y package.json |
+| Documentación desactualizada | Media | Bajo | 🟢 Bajo | README e informe actualizados |
+
+### Diagrama de Gestión de Riesgos — Flujo
+
+```mermaid
+graph TB
+    START["Identificar Riesgo"] --> EVAL{Evaluar Probabilidad}
+
+    EVAL -->|"Alta"| HIGH["Prioridad Alta"]
+    EVAL -->|"Media"| MID["Prioridad Media"]
+    EVAL -->|"Baja"| LOW["Prioridad Baja"]
+
+    HIGH --> PLAN_H["Plan de Mitigación Inmediato"]
+    MID --> PLAN_M["Plan de Mitigación Programado"]
+    LOW --> PLAN_L["Monitoreo Periódico"]
+
+    PLAN_H --> EXEC_H["Ejecutar mitigación"]
+    PLAN_M --> EXEC_M["Ejecutar cuando sea necesario"]
+    PLAN_L --> EXEC_L["Revisar en cada sprint"]
+
+    EXEC_H --> MONITOR["Monitorear resultados"]
+    EXEC_M --> MONITOR
+    EXEC_L --> MONITOR
+
+    MONITOR --> RESOLVE{¿Riesgo mitigado?}
+    RESOLVE --> |"Sí"| CLOSE["Riesgo cerrado"]
+    RESOLVE --> |"No"| REEVAL["Reevaluar y escalar"]
+
+    style START fill:#1a1a2e,stroke:#7209B7,color:#E8EAF0
+    style HIGH fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style MID fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style LOW fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style CLOSE fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style REEVAL fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Cronograma de Entregas por Miembro
+
+```mermaid
+gantt
+    title Cronograma de Entregas — Grupo 19
+    dateFormat  YYYY-MM-DD
+    axisFormat  %d %b
+
+    section Backend (Miembro 1)
+    API FastAPI + Endpoints       :done, b1, 2026-03-15, 20d
+    Integración Supabase          :done, b2, after b1, 10d
+    Manejo de errores y caché     :done, b3, after b2, 10d
+
+    section Frontend (Miembro 2)
+    Dashboard React + Vite        :done, f1, 2026-03-20, 25d
+    Componentes (Mapa, Heatmap)   :done, f2, after f1, 15d
+    Simulador de Tickets          :done, f3, after f2, 10d
+
+    section Datos/ML (Miembro 3)
+    Generador de dataset          :done, d1, 2026-03-10, 15d
+    Modelo Prophet                :done, d2, after d1, 20d
+    Calibración con INE           :done, d3, after d2, 10d
+
+    section DevOps (Miembro 4)
+    Configurar Supabase           :done, dv1, 2026-04-01, 10d
+    Despliegue Vercel/Render      :done, dv2, after dv1, 10d
+    CI/CD + Tests                 :done, dv3, after dv2, 10d
+
+    section Entrega Final
+    Documentación y informe       :active, doc, after dv3, 15d
+    Defensa del proyecto          :def, after doc, 1d
+```
