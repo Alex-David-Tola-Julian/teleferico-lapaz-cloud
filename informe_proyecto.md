@@ -1784,3 +1784,477 @@ graph LR
     style FASE3 fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
     style FASE4 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
 ```
+
+## XI. Diagramas Técnicos Avanzados
+
+### Manejo de Errores y Excepciones del Backend
+
+```mermaid
+graph TB
+    REQ[Petición HTTP] --> ROUTE{¿Ruta válida?}
+
+    ROUTE --> |"No"| E404["HTTP 404 — Endpoint no encontrado"]
+    ROUTE --> |"Sí"| VALIDATE{¿Body válido?}
+
+    VALIDATE --> |"No"| E422["HTTP 422 — ValidationError (Pydantic)"]
+    VALIDATE --> |"Sí"| LOAD{¿Datos cargados?}
+
+    LOAD --> |"No"| CARGA[Intentar cargar datos]
+    CARGA --> SUP_CHECK{¿Supabase configurado?}
+
+    SUP_CHECK --> |"Sí"| SUP_LOAD[Cargar desde Supabase]
+    SUP_CHECK --> |"No"| CSV_CHECK{¿CSV local existe?}
+
+    CSV_CHECK --> |"Sí"| CSV_LOAD[Cargar CSV]
+    CSV_CHECK --> |"No"| GEN[Generar dataset con data_generator]
+
+    SUP_LOAD --> |"Éxito"| READY[DataFrame listo]
+    SUP_LOAD --> |"Error"| CSV_CHECK
+    CSV_LOAD --> |"Éxito"| READY
+    CSV_LOAD --> |"Error"| GEN
+    GEN --> READY
+
+    READY --> FILTER{¿Filtros válidos?}
+    FILTER --> |"No"| E400["HTTP 400 — Bad Request"]
+    FILTER --> |"Sí"| PROCESS[Procesar datos]
+
+    PROCESS --> EMPTY{¿Resultado vacío?}
+    EMPTY --> |"Sí"| EMPTY_RESP["Retornar arrays vacíos"]
+    EMPTY --> |"No"| RESPONSE[HTTP 200 — JSON Response]
+
+    subgraph SUPABASE_ERRORS["Errores de Supabase"]
+        SE1["Conexión rechazada → fallback a CSV"]
+        SE2["Timeout → fallback a caché en memoria"]
+        SE3["Tabla no existe → usar CSV local"]
+        SE4["Auth fallida → usar anon key"]
+    end
+
+    subgraph CSV_ERRORS["Errores de CSV"]
+        CE1["Archivo no encontrado → generar dataset"]
+        CE2["CSV corrupto → reintentar con python engine"]
+        CE3["Encoding inválido → usar latin-1"]
+        CE4["Columnas faltantes → drop NaN"]
+    end
+
+    subgraph PREDICTION_ERRORS["Errores de Predicción"]
+        PE1["Datos insuficientes < 10 días → retornar error"]
+        PE2["Prophet falla → usar LinearRegression"]
+        PE3[" Modelo no converge → usar fallback"]
+    end
+
+    subgraph TICKET_ERRORS["Errores de Tickets"]
+        TE1["Línea inválida → HTTP 400"]
+        TE2["Pasajeros ≤ 0 → HTTP 400"]
+        TE3["Error al guardar CSV → HTTP 500"]
+        TE4["Error al subir Supabase → ignorar, guardar local"]
+    end
+
+    E404 --> |"Response"| CLIENT[Frontend]
+    E422 --> CLIENT
+    E400 --> CLIENT
+    E500 --> CLIENT
+    RESPONSE --> CLIENT
+    EMPTY_RESP --> CLIENT
+
+    SUPABASE_ERRORS -.-> SUP_LOAD
+    CSV_ERRORS -.-> CSV_LOAD
+    PREDICTION_ERRORS -.-> PROCESS
+    TICKET_ERRORS -.-> PROCESS
+
+    style REQ fill:#1a1a2e,stroke:#7209B7,color:#E8EAF0
+    style E404 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style E422 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style E400 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style RESPONSE fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style CLIENT fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style SUPABASE_ERRORS fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style CSV_ERRORS fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style PREDICTION_ERRORS fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style TICKET_ERRORS fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
+
+### Tabla de Manejo de Errores
+
+| Error | Código HTTP | Causa | Solución automática |
+|-------|------------|-------|---------------------|
+| Endpoint no encontrado | 404 | Ruta incorrecta | Verificar endpoints disponibles |
+| Body inválido | 422 | Datos faltantes o tipo incorrecto | Pydantic valida automáticamente |
+| Filtros inválidos | 400 | Parámetros fuera de rango | Retornar respuesta vacía |
+| Línea inválida | 400 | Línea no existe en el sistema | Validar contra LINEAS_OFICIALES |
+| Pasajeros ≤ 0 | 400 | Cantidad inválida | Validar antes de procesar |
+| Supabase caído | 500 | Timeout o conexión rechazada | Fallback automático a CSV |
+| CSV no existe | — | Primera ejecución | Generar dataset automáticamente |
+| CSV corrupto | — | Archivo dañado | Reintentar con python engine |
+| Prophet falla | — | Modelo no converge | Usar Regresión Lineal como respaldo |
+| Datos insuficientes | — | Menos de 10 días | Retornar error al frontend |
+
+### Pipeline de CI/CD Completo
+
+```mermaid
+graph TB
+    subgraph TRIGGER["Trigger"]
+        T1["Push a main"]
+        T2["Pull Request"]
+        T3["Tag v*.*.*"]
+    end
+
+    subgraph BUILD["Paso 1 — Build"]
+        B1["Checkout del código"]
+        B2["Instalar Python 3.13"]
+        B3["Instalar Node.js 18"]
+        B4["pip install -r requirements.txt"]
+        B5["cd frontend && npm install"]
+        B6["npm run build"]
+    end
+
+    subgraph TEST["Paso 2 — Test"]
+        TS1["pytest tests/ — Backend"]
+        TS2["npm run lint — Frontend"]
+        TS3["npm run build — Verificar build"]
+        TS4["Verificar que no hay errores"]
+    end
+
+    subgraph DEPLOY_FE["Paso 3 — Deploy Frontend (Vercel)"]
+        DF1["Vercel detecta push a main"]
+        DF2["Build automático"]
+        DF3["Desplegar a生产"]
+        DF4["Asignar URL: vercel.app"]
+    end
+
+    subgraph DEPLOY_BE["Paso 3 — Deploy Backend (Render)"]
+        DB1["Render detecta push a main"]
+        DB2["Build: pip install"]
+        DB3["Deploy: uvicorn api:app"]
+        DB4["Asignar URL: onrender.com"]
+    end
+
+    subgraph DEPLOY_BD["Paso 3 — Base de Datos"]
+        DD1["Supabase: migración automática"]
+        DD2["RLS policies activas"]
+        DD3["Datos existentes intactos"]
+    end
+
+    subgraph MONITOR["Paso 4 — Monitoreo"]
+        M1["Health checks automáticos"]
+        M2["Logs en Vercel/Render"]
+        M3["Alertas de error"]
+    end
+
+    T1 --> BUILD
+    T2 --> BUILD
+    T3 --> BUILD
+
+    B1 --> B2 --> B3 --> B4 --> B5 --> B6
+
+    B6 --> TEST
+    TS1 --> TS2 --> TS3 --> TS4
+
+    TEST --> |"Pasan todos"| DEPLOY_FE
+    TEST --> |"Pasan todos"| DEPLOY_BE
+    TEST --> |"Pasan todos"| DEPLOY_BD
+    TEST --> |"Fallan"| FAIL["❌ Deploy cancelado"]
+    FAIL --> NOTIFY["Notificar al equipo"]
+
+    DEPLOY_FE --> MONITOR
+    DEPLOY_BE --> MONITOR
+    DEPLOY_BD --> MONITOR
+
+    M1 --> OK["✅ Deploy exitoso"]
+
+    style TRIGGER fill:#1a1a2e,stroke:#7209B7,color:#E8EAF0
+    style BUILD fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style TEST fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style DEPLOY_FE fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style DEPLOY_BE fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style DEPLOY_BD fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style MONITOR fill:#2a2a1a,stroke:#7209B7,color:#E8EAF0
+    style FAIL fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style OK fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+```
+
+### Secuencia de CI/CD — Flujo Detallado
+
+```mermaid
+sequenceDiagram
+    actor DEV as Desarrollador
+    participant GH as GitHub
+    participant Vercel as Vercel
+    participant Render as Render
+    participant Supa as Supabase
+
+    DEV->>GH: git push origin main
+    GH->>GH: Trigger GitHub Actions
+
+    rect rgb(13, 33, 55)
+        Note right of GH: PASO 1 — BUILD
+        GH->>GH: Checkout código
+        GH->>GH: Instalar dependencias
+        GH->>GH: Build frontend (npm run build)
+    end
+
+    rect rgb(26, 42, 26)
+        Note right of GH: PASO 2 — TEST
+        GH->>GH: pytest tests/
+        GH->>GH: npm run lint
+        alt Tests fallan
+            GH-->>DEV: ❌ Notificación de fallo
+        end
+    end
+
+    rect rgb(42, 42, 26)
+        Note right of GH: PASO 3 — DEPLOY
+        GH->>Vercel: Push detectado
+        Vercel->>Vercel: Build + Deploy frontend
+        GH->>Render: Push detectado
+        Render->>Render: Build + Deploy backend
+    end
+
+    rect rgb(42, 26, 26)
+        Note right of GH: PASO 4 — MONITOREO
+        Vercel-->>DEV: ✅ Frontend desplegado
+        Render-->>DEV: ✅ Backend desplegado
+    end
+
+    Note over Supa: Supabase siempre disponible
+```
+
+### Configuración de GitHub Actions (.github/workflows/deploy.yml)
+
+```yaml
+# Ejemplo de pipeline de CI/CD
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: pytest tests/
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+```
+
+### Autenticación y Seguridad de Supabase (RLS)
+
+```mermaid
+graph TB
+    subgraph CLIENTE["Cliente — Frontend"]
+        REQ1["Request HTTP"]
+        ANON["Supabase Anon Key"]
+        USER["Usuario autenticado (futuro)"]
+    end
+
+    subgraph SUPABASE_S["Supabase — Capa de Seguridad"]
+        APIGW["API Gateway"]
+        RLS["Row Level Security (RLS)"]
+        AUTH["Auth Service"]
+        ROLES["Roles de BD"]
+    end
+
+    subgraph DB_S["Base de Datos PostgreSQL"]
+        TABLE["Tabla: teleferico"]
+        POLICIES["Políticas RLS"]
+        PERMITS["Permisos por rol"]
+    end
+
+    REQ1 --> APIGW
+    ANON --> APIGW
+    USER --> AUTH
+    AUTH --> APIGW
+
+    APIGW --> RLS
+    RLS --> |"¿Política permite?"| TABLE
+    RLS --> |"¿Política permite?"| POLICIES
+
+    TABLE --> PERMITS
+    POLICIES --> PERMITS
+
+    subgraph POLICY_TYPES["Tipos de Políticas RLS"]
+        P1["SELECT — Quién puede leer"]
+        P2["INSERT — Quién puede insertar"]
+        P3["UPDATE — Quién puede actualizar"]
+        P4["DELETE — Quién puede eliminar"]
+    end
+
+    subgraph ROLES_DEF["Roles Definidos"]
+        R1["anon — Solo lectura (key pública)"]
+        R2["authenticated — Lectura + escritura"]
+        R3["service_role — Acceso total (admin)"]
+    end
+
+    POLICY_TYPES -.-> RLS
+    ROLES_DEF -.-> ROLES
+
+    style CLIENTE fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style SUPABASE_S fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style DB_S fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style POLICY_TYPES fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style ROLES_DEF fill:#2a2a1a,stroke:#7209B7,color:#E8EAF0
+```
+
+### Políticas RLS — Configuración Actual vs Futura
+
+```mermaid
+graph TB
+    subgraph ACTUAL["Estado Actual — Sin RLS"]
+        A1["Tabla teleferico"]
+        A2["Acceso anónimo habilitado"]
+        A3["Lectura + escritura libre"]
+        A4["Riesgo: cualquier usuario puede modificar datos"]
+    end
+
+    subgraph FUTURO["Estado Futuro — Con RLS"]
+        F1["Tabla teleferico"]
+        F2["Política SELECT: anónimo puede leer"]
+        F3["Política INSERT: solo authenticated"]
+        F4["Política UPDATE: solo admin"]
+        F5["Política DELETE: solo admin"]
+    end
+
+    subgraph SQL_RLS["SQL de Ejemplo"]
+        S1["ALTER TABLE teleferico ENABLE ROW LEVEL SECURITY"]
+        S2["CREATE POLICY read_all ON teleferico FOR SELECT USING (true)"]
+        S3["CREATE POLICY insert_auth ON teleferico FOR INSERT WITH CHECK (auth.role() = 'authenticated')"]
+        S4["CREATE POLICY admin_all ON teleferico FOR ALL USING (auth.role() = 'service_role')"]
+    end
+
+    ACTUAL -->|"Migrar"| FUTURO
+    FUTURO --> SQL_RLS
+
+    style ACTUAL fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style FUTURO fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style SQL_RLS fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+```
+
+### Capas de Seguridad del Proyecto
+
+```mermaid
+graph TB
+    subgraph CAPA1["Capa 1 — Red"]
+        C1A["HTTPS obligatorio (SSL automático)"]
+        C1B["CORS configurado"]
+        C1C["Dominios permitidos"]
+    end
+
+    subgraph CAPA2["Capa 2 — Autenticación"]
+        C2A["Supabase Anon Key (solo lectura)"]
+        C2B["Service Role Key (solo backend)"]
+        C2C["Auth de usuarios (futuro)"]
+    end
+
+    subgraph CAPA3["Capa 3 — Autorización"]
+        C3A["RLS policies en PostgreSQL"]
+        C3B["Roles: anon, authenticated, service_role"]
+        C3C["Permisos por tabla"]
+    end
+
+    subgraph CAPA4["Capa 4 — Aplicación"]
+        C4A["Validación con Pydantic"]
+        C4B["Sanitización de inputs"]
+        C4C["Variables de entorno en .env"]
+        C4D[".gitignore excluye .env"]
+    end
+
+    subgraph CAPA5["Capa 5 — Datos"]
+        C5A["Backups automáticos de Supabase"]
+        C5B["CSV como respaldo local"]
+        C5C["Caché en memoria"]
+    end
+
+    CAPA1 --> CAPA2 --> CAPA3 --> CAPA4 --> CAPA5
+
+    style CAPA1 fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style CAPA2 fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style CAPA3 fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style CAPA4 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style CAPA5 fill:#1a1a2e,stroke:#7209B7,color:#E8EAF0
+```
+
+### Flujo de Autenticación de Supabase
+
+```mermaid
+sequenceDiagram
+    participant F as Frontend
+    participant API as API Gateway Supabase
+    participant DB as PostgreSQL
+    participant RLS as Row Level Security
+
+    Note over F,RLS: Request con Anon Key (lectura)
+
+    F->>API: GET /rest/v1/teleferico + anon key
+    API->>API: Validar API key
+    API->>RLS: Evaluar políticas SELECT
+    RLS->>RLS: ¿Política permite? → true
+    RLS->>DB: SELECT * FROM teleferico
+    DB-->>F: Datos retornados
+
+    Note over F,RLS: Request con Service Role (escritura)
+
+    F->>API: POST /rest/v1/teleferico + service_role
+    API->>API: Validar API key
+    API->>RLS: Evaluar políticas INSERT
+    RLS->>RLS: ¿Política permite? → service_role = true
+    RLS->>DB: INSERT INTO teleferico
+    DB-->>F: Registro creado
+```
+
+### Diagrama de Resumen Técnico del Proyecto
+
+```mermaid
+graph TB
+    subgraph RESUMEN["Resumen del Proyecto"]
+        R1["Stack: React + FastAPI + Supabase"]
+        R2["Datos: CSV local + PostgreSQL nube"]
+        R3["ML: Prophet + Scikit-learn"]
+        R4["Deploy: Vercel + Render"]
+        R5["Costo: $0/mes (free tiers)"]
+    end
+
+    subgraph LOGROS["Logros Alcanzados"]
+        L1["Dashboard interactivo completo"]
+        L2["Predicción de demanda funcional"]
+        L3["Simulador de tickets en tiempo real"]
+        L4["Integración con Supabase"]
+        L5["37+ diagramas documentados"]
+    end
+
+    subgraph FUTURO2["Mejoras Futuras"]
+        F1["Autenticación de usuarios"]
+        F2["WebSocket en tiempo real"]
+        F3["Modelos ML serializados"]
+        F4["Móvil con React Native"]
+        F5["Datos reales del INE"]
+    end
+
+    RESUMEN --> LOGROS --> FUTURO2
+
+    style RESUMEN fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style LOGROS fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style FUTURO2 fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
