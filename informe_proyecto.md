@@ -2157,24 +2157,28 @@ graph TB
 ```mermaid
 graph TB
     subgraph CAPA1["Capa 1 — Red"]
-        C1A["HTTPS obligatorio (SSL automático)"]
+        C1X(( ))
+        C1A["HTTPS obligatorio — SSL automático"]
         C1B["CORS configurado"]
         C1C["Dominios permitidos"]
     end
 
     subgraph CAPA2["Capa 2 — Autenticación"]
-        C2A["Supabase Anon Key (solo lectura)"]
-        C2B["Service Role Key (solo backend)"]
-        C2C["Auth de usuarios (futuro)"]
+        C2X(( ))
+        C2A["Supabase Anon Key — solo lectura"]
+        C2B["Service Role Key — solo backend"]
+        C2C["Auth de usuarios — futuro"]
     end
 
     subgraph CAPA3["Capa 3 — Autorización"]
+        C3X(( ))
         C3A["RLS policies en PostgreSQL"]
         C3B["Roles: anon, authenticated, service_role"]
         C3C["Permisos por tabla"]
     end
 
     subgraph CAPA4["Capa 4 — Aplicación"]
+        C4X(( ))
         C4A["Validación con Pydantic"]
         C4B["Sanitización de inputs"]
         C4C["Variables de entorno en .env"]
@@ -2182,12 +2186,16 @@ graph TB
     end
 
     subgraph CAPA5["Capa 5 — Datos"]
+        C5X(( ))
         C5A["Backups automáticos de Supabase"]
         C5B["CSV como respaldo local"]
         C5C["Caché en memoria"]
     end
 
-    CAPA1 --> CAPA2 --> CAPA3 --> CAPA4 --> CAPA5
+    C1X --> C2X
+    C2X --> C3X
+    C3X --> C4X
+    C4X --> C5X
 
     style CAPA1 fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
     style CAPA2 fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
