@@ -107,6 +107,106 @@ El proyecto demuestra un caso práctico de análisis de datos en la nube mediant
 - Arquitectura en capas (frontend, backend, base de datos).
 - Estilo cliente-servidor con API REST.
 
+### Diagrama de Arquitectura
+
+```mermaid
+graph TB
+    subgraph USUARIO
+        U[Navegador Web]
+    end
+
+    subgraph FRONTEND["Frontend — React + Vite"]
+        UI[Dashboard Interactivo]
+        MAP[Mapa de Estaciones]
+        GRAF[Gráficas Plotly]
+        TICK[Simulador de Tickets]
+        PRED[Predicción de Demanda]
+        RANK[Ranking de Estaciones]
+    end
+
+    subgraph BACKEND["Backend — FastAPI + Python"]
+        API[API REST /api/*]
+        DS[Data Service — Pandas]
+        ML[ML Service — Prophet / Scikit-learn]
+        DG[Data Generator]
+    end
+
+    subgraph DATOS["Almacenamiento de Datos"]
+        CSV[(CSV Local)]
+        SUP[(Supabase — PostgreSQL)]
+    end
+
+    U --> UI
+    UI --> MAP
+    UI --> GRAF
+    UI --> TICK
+    UI --> PRED
+    UI --> RANK
+
+    MAP --> API
+    GRAF --> API
+    TICK --> API
+    PRED --> API
+    RANK --> API
+
+    API --> DS
+    API --> ML
+    DS --> CSV
+    DS --> SUP
+    DG --> CSV
+
+    ML --> DS
+
+    style USUARIO fill:#1a1a2e,stroke:#00B4FF,color:#E8EAF0
+    style FRONTEND fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style BACKEND fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style DATOS fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Flujo de Registro de Tickets
+
+```mermaid
+sequenceDiagram
+    actor U as Usuario
+    participant F as Frontend
+    participant A as API FastAPI
+    participant D as Data Service
+    participant C as CSV Local
+    participant S as Supabase
+
+    U->>F: Selecciona línea e ingresa pasajeros
+    F->>A: POST /api/registrar-ticket
+    A->>D: registrar_ticket(linea, pasajeros)
+    D->>D: Generar registro con fecha, hora, estación, saturación
+    D->>C: Guardar nueva fila en CSV
+    D->>D: Actualizar DataFrame en memoria
+    D->>S: POST a Supabase (solo el registro nuevo)
+    D-->>A: Retorna registro
+    A-->>F: Respuesta JSON con el registro
+    F-->>U: Muestra confirmación verde
+```
+
+### Flujo de Predicción
+
+```mermaid
+sequenceDiagram
+    actor U as Usuario
+    participant F as Frontend
+    participant A as API FastAPI
+    participant ML as ML Service
+    participant P as Prophet / Scikit-learn
+
+    U->>F: Selecciona línea y días a predecir
+    F->>A: POST /api/predict
+    A->>A: Filtrar datos por línea y fecha
+    A->>ML: generar_prediccion(df, linea, dias)
+    ML->>P: Entrenar modelo y predecir
+    P-->>ML: Predicciones + intervalos
+    ML-->>A: history + prediction + kpi
+    A-->>F: Respuesta JSON
+    F-->>U: Gráfica con histórico y proyección
+```
+
 ### Capas del sistema
 #### Frontend (React + Vite)
 - Interfaz gráfica del dashboard.
