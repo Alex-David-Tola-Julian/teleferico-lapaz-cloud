@@ -100,3 +100,110 @@ El proyecto demuestra un caso práctico de análisis de datos en la nube mediant
 - Mostrar la app en vivo con mapa, gráficos y predicción.
 - Explicar cómo los datos se generaron y cómo se podría mover a Supabase.
 - Resaltar el valor local del proyecto y su relevancia para La Paz.
+
+## III. Arquitectura del Proyecto
+
+### Tipo de arquitectura
+- Arquitectura en capas (frontend, backend, base de datos).
+- Estilo cliente-servidor con API REST.
+
+### Capas del sistema
+#### Frontend (React + Vite)
+- Interfaz gráfica del dashboard.
+- Consume la API con Axios.
+- Visualiza mapas, gráficos, ranking, tickets y predicciones.
+
+#### Backend (FastAPI + Python)
+- Expone los endpoints REST.
+- Procesa datos con Pandas.
+- Genera predicciones con Prophet y regresión lineal.
+- Registra tickets nuevos en CSV y en Supabase.
+
+#### Base de datos (Supabase)
+- Almacena registros de pasajeros en PostgreSQL.
+- Permite consultas SQL y acceso REST.
+
+### Flujo de datos
+1. El dataset se genera o carga en el backend.
+2. El frontend solicita datos a la API.
+3. El backend filtra, agrupa y devuelve métricas.
+4. Las predicciones se calculan en el servidor.
+5. Los tickets nuevos se guardan localmente y se suben a Supabase.
+
+## IV. Análisis del Proyecto
+
+### Problema que resuelve
+- Necesidad de conocer el flujo de pasajeros en el Teleférico de La Paz.
+- Falta de información para tomar decisiones sobre horarios, personal y capacidad.
+
+### Solución propuesta
+- Dashboard web para visualizar datos en tiempo real.
+- Predicción de demanda futura.
+- Ranking de estaciones más y menos concurridas.
+- Simulador de tickets para probar el sistema con nuevos registros.
+
+### Tipo de datos
+- Datos de pasajeros por línea, estación, hora y día.
+- Datos geográficos de estaciones.
+- Datos de saturación y demanda.
+
+### Modelos utilizados
+- Prophet para predicción de series temporales con estacionalidad.
+- Regresión lineal como respaldo si Prophet no está disponible.
+- Métricas agregadas con Pandas para ranking, promedios y totales.
+
+## V. Diseño del Sistema
+
+### Diseño del backend
+- Estructura en módulos: `api.py`, `app/services/`, `app/schemas/`, `app/core/`.
+- Endpoints separados por función: métricas, mapa, temporal, heatmap, ranking, predicción y tickets.
+- Validación de datos con Pydantic.
+- Caché en memoria para mejorar tiempos de respuesta.
+
+### Diseño del frontend
+- Componentes por sección: mapa, temporal, heatmap, ranking, predicción, tickets.
+- Navegación con React Router.
+- Estado global con React Query para Actualización de datos.
+
+### Diseño de datos
+- CSV como fuente local principal.
+- Supabase como base de datos en la nube.
+- Conversión y limpieza de datos en el backend.
+
+## VI. Tipo de Organización del Proyecto
+
+### Organización técnica
+- Código separado en carpetas: `app/`, `frontend/`, `data/`, `tests/`.
+- Dependencias controladas con `requirements.txt` y `package.json`.
+- Variables de entorno en `.env`.
+
+### Organización del trabajo
+- Despiegue separado para frontend y backend.
+- Uso de GitHub para control de versiones.
+- Documentación en README e informe.
+
+## VII. Consulta para ver los datos más recientes en Supabase
+
+### SQL (desde el Editor de Supabase)
+```sql
+SELECT *
+FROM teleferico
+ORDER BY fecha DESC, hora DESC
+LIMIT 20;
+```
+
+### API REST
+```http
+GET https://<tu-proyecto>.supabase.co/rest/v1/teleferico?order=fecha.desc,hora.desc&limit=20
+```
+
+Headers necesarios:
+```json
+{
+  "apikey": "<SUPABASE_ANON_KEY>",
+  "Authorization": "Bearer <SUPABASE_ANON_KEY>"
+}
+```
+
+### Nota
+Con la implementación actual, cada ticket registrado desde el simulador se sube automáticamente a Supabase como un solo registro nuevo.

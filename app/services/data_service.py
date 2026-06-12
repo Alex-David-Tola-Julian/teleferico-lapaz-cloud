@@ -205,6 +205,24 @@ def registrar_ticket(linea: str, pasajeros: int) -> dict:
         nueva_fila["hora"] = nueva_fila["hora"].astype(int)
         _global_df = pd.concat([_global_df, nueva_fila], ignore_index=True)
 
+    # Subir solo el registro nuevo a Supabase (si está configurado)
+    try:
+        supabase_url = settings.SUPABASE_URL
+        supabase_key = settings.SUPABASE_ANON_KEY
+        supabase_table = settings.SUPABASE_TABLE
+
+        if supabase_url and supabase_key and supabase_table:
+            rest_url = f"{supabase_url.rstrip('/')}/rest/v1/{supabase_table}"
+            headers = {
+                "apikey": supabase_key,
+                "Authorization": f"Bearer {supabase_key}",
+                "Content-Type": "application/json",
+                "Prefer": "return=minimal",
+            }
+            requests.post(rest_url, json=nuevo, headers=headers)
+    except Exception:
+        pass
+
     return nuevo
 
 def filter_data(params):
