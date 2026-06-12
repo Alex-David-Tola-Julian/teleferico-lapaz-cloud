@@ -106,6 +106,7 @@ teleferico-lapaz-cloud/
 
 ---
 
+
 ## Tecnologías Utilizadas
 
 ### Backend
