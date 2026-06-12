@@ -1410,3 +1410,377 @@ graph TB
     style DOMAIN fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
     style INFRASTRUCTURE fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
 ```
+
+## X. Diagramas de Soporte y Justificación en la Nube
+
+### Comparativa de Costos — Planes Gratuitos vs Pagos
+
+```mermaid
+graph TB
+    subgraph VERCEL["Vercel — Frontend"]
+        VF1["Free Tier"]
+        VF2["Pro: $20/mes por usuario"]
+
+        VF1A["100 GB de transferencia"]
+        VF1B["Despliegue ilimitado"]
+        VF1C["Soporte comunitario"]
+
+        VF2A["Transferencia ilimitada"]
+        VF2B["Soporte prioritario"]
+        VF2C["Analíticas avanzadas"]
+
+        VF1 --> VF1A
+        VF1 --> VF1B
+        VF1 --> VF1C
+        VF2 --> VF2A
+        VF2 --> VF2B
+        VF2 --> VF2C
+    end
+
+    subgraph RENDER["Render — Backend"]
+        RF1["Free Tier"]
+        RF2["Starter: $7/mes"]
+        RF3["Standard: $25/mes"]
+
+        RF1A["Servidor se duerme after 15 min"]
+        RF1B["512 MB RAM"]
+        RF1C["Compartido"]
+
+        RF2A["512 MB RAM dedicado"]
+        RF2B["Sin sleep"]
+        RF2C["DNS personalizado"]
+
+        RF3A["1 GB RAM"]
+        RF3B["Escalabilidad automática"]
+        RF3C["Soporte email"]
+
+        RF1 --> RF1A
+        RF1 --> RF1B
+        RF1 --> RF1C
+        RF2 --> RF2A
+        RF2 --> RF2B
+        RF2 --> RF2C
+        RF3 --> RF3A
+        RF3 --> RF3B
+        RF3 --> RF3C
+    end
+
+    subgraph RAILWAY["Railway — Alternativa Backend"]
+        RFREE["Free: $5 de crédito mensual"]
+        RPRO["Pro: $5/mes + uso"]
+
+        RFREEA["512 MB RAM / 1 GB disco"]
+        RFREEB["Se agota el crédito = se apaga"]
+        RPROA["RAM y CPU ilimitados"]
+        RPROB["Escalabilidad horizontal"]
+
+        RFREE --> RFREEA
+        RFREE --> RFREEB
+        RPRO --> RPROA
+        RPRO --> RPROB
+    end
+
+    subgraph SUPABASE["Supabase — Base de Datos"]
+        SF1["Free Tier"]
+        SF2["Pro: $25/mes"]
+        SF3["Team: $599/mes"]
+
+        SF1A["500 MB de base de datos"]
+        SF1B["1 GB de almacenamiento"]
+        SF1C["50,000 usuarios activos/mes"]
+        SF1D["APIs REST y GraphQL"]
+
+        SF2A["8 GB de base de datos"]
+        SF2B["100 GB de almacenamiento"]
+        SF2C["Soporte prioritario"]
+        SF2D["Auth + Storage"]
+
+        SF3A["Dedicado"]
+        SF3B["SLA 99.9%"]
+        SF3C["Soporte 24/7"]
+
+        SF1 --> SF1A
+        SF1 --> SF1B
+        SF1 --> SF1C
+        SF1 --> SF1D
+        SF2 --> SF2A
+        SF2 --> SF2B
+        SF2 --> SF2C
+        SF2 --> SF2D
+        SF3 --> SF3A
+        SF3 --> SF3B
+        SF3 --> SF3C
+    end
+
+    subgraph TOTAL["Costo Total Estimado"]
+        TFREE["Plan Gratuito: $0/mes"]
+        TPAID["Plan Pago: ~$52-82/mes"]
+
+        TFREEA["Funcional para demo"]
+        TFREEB["Limitaciones: sleep, storage"]
+        TPAIDA["Producción completa"]
+        TPAIDB["Escalable y confiable"]
+
+        TFREE --> TFREEA
+        TFREE --> TFREEB
+        TPAID --> TPAIDB
+        TPAID --> TPAIDB
+    end
+
+    style VERCEL fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style RENDER fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style RAILWAY fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style SUPABASE fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style TOTAL fill:#1a1a2e,stroke:#7209B7,color:#E8EAF0
+```
+
+### Tabla Comparativa de Planes
+
+| Servicio | Plan Gratuito | Plan Pago Recomendado | Costo |
+|----------|--------------|----------------------|-------|
+| **Vercel** (Frontend) | 100 GB transferencia, despliegue ilimitado | Pro | $20/mes |
+| **Render** (Backend) | 512 MB RAM, sleep after 15 min | Starter | $7/mes |
+| **Railway** (alternativa) | $5 crédito/mes | Pro | $5/mes + uso |
+| **Supabase** (BD) | 500 MB DB, 1 GB storage | Pro | $25/mes |
+| **TOTAL** | **$0/mes** | **~$52-57/mes** | |
+
+### Modelo de Responsabilidad Compartida (Shared Responsibility Model)
+
+```mermaid
+graph TB
+    subgraph PROVEEDOR["Proveedor Cloud (Supabase, Vercel, Render)"]
+        P1["Infraestructura física (servidores, red, data center)"]
+        P2["Sistema operativo y actualizaciones de seguridad"]
+        P3["Replicación y backups de la base de datos"]
+        P4["Certificados SSL / HTTPS"]
+        P5["Protección contra DDoS"]
+        P6["Redundancia geográfica"]
+        P7["Cumplimiento GDPR / SOC 2"]
+        P8[" Mantenimiento de hardware"]
+    end
+
+    subgraph COMPARTIDO["Responsabilidad Compartida"]
+        C1["Configuración de CORS"]
+        C2["Variables de entorno (.env)"]
+        C3["Políticas de autenticación"]
+        C4["Reglas de acceso a la base de datos"]
+        C5["Gestión de dependencias y versiones"]
+        C6["Monitoreo de uso y costos"]
+    end
+
+    subgraph EQUIPO["Equipo del Proyecto (Grupo 19)"]
+        E1["Código de la aplicación (frontend + backend)"]
+        E2["Diseño de la base de datos (schema)"]
+        E3["Lógica de negocio y predicciones"]
+        E4["Seguridad del código (validación, sanitización)"]
+        E5["Gestión de datos y calibración"]
+        E6["Tests y documentación"]
+        E7["Despliegue y configuración"]
+        E8["Gestión de acceso de usuarios"]
+    end
+
+    PROVEEDOR --> COMPARTIDO
+    EQUIPO --> COMPARTIDO
+
+    style PROVEEDOR fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style COMPARTIDO fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style EQUIPO fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Tabla de Responsabilidades
+
+| Capa | Proveedor Cloud | Equipo (Grupo 19) |
+|------|----------------|-------------------|
+| **Infraestructura** | Servidores, storage, red | — |
+| **Plataforma** | SO, runtime, actualizaciones | — |
+| **Datos** | Backups, replicación | Schema, calibración, integridad |
+| **Código** | — | Frontend, backend, lógica ML |
+| **Seguridad** | DDoS, SSL, firewall físico | CORS, auth, validación |
+| **Red** | DNS, CDN, load balancing | Configuración de dominios |
+| **Monitoreo** | Métricas de infra | Logs de aplicación, uso |
+| **Costos** | Facturación y límites | Optimización de consultas |
+
+### Comparación de Modelos de Servicio Cloud (IaaS / PaaS / SaaS / DBaaS)
+
+```mermaid
+graph TB
+    subgraph IaaS["IaaS — Infrastructure as a Service"]
+        I1["Proveedor gestiona: hardware, red, storage, virtualización"]
+        I2["Usuario gestiona: SO, runtime, middleware, datos, código"]
+        I3["Ejemplos: AWS EC2, Google Compute Engine, Azure VM"]
+        I4["Nuestro proyecto: NO usa IaaS directamente"]
+    end
+
+    subgraph PAAS["PaaS — Platform as a Service"]
+        P1["Proveedor gestiona: infra + SO + runtime + deploy"]
+        P2["Usuario gestiona: código y datos"]
+        P3["Ejemplos: Vercel, Render, Railway, Heroku"]
+        P4["Nuestro proyecto: Frontend en Vercel, Backend en Render"]
+    end
+
+    subgraph DBAAS["DBaaS — Database as a Service"]
+        D1["Proveedor gestiona: infra + motor de BD + backups"]
+        D2["Usuario gestiona: schema, consultas, datos"]
+        D3["Ejemplos: Supabase, PlanetScale, Firebase"]
+        D4["Nuestro proyecto: Supabase (PostgreSQL)"]
+    end
+
+    subgraph SAAS["SaaS — Software as a Service"]
+        S1["Proveedor gestiona: TODO (app completa)"]
+        S2["Usuario gestiona: solo uso y configuración"]
+        S3["Ejemplos: Google Sheets, Salesforce, Notion"]
+        S4["Nuestro proyecto: NO usa SaaS para componentes core"]
+    end
+
+    IaaS --> |"Más control, más trabajo"| PAAS
+    PAAS --> |"Balance ideal para nuestro proyecto"| DBAAS
+    DBAAS --> |"Menos control, menos trabajo"| SAAS
+
+    style IaaS fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style PAAS fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style DBAAS fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style SAAS fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
+
+### Ubicación de Componentes del Proyecto por Modelo
+
+```mermaid
+graph LR
+    subgraph PAAS_USO["PaaS — Nuestro Uso"]
+        V1["Vercel → Frontend React"]
+        V2["Render → Backend FastAPI"]
+        V3["Railway → Alternativa Backend"]
+    end
+
+    subgraph DBAAS_USO["DBaaS — Nuestro Uso"]
+        S1["Supabase → PostgreSQL"]
+        S2["Supabase → REST API"]
+        S3["Supabase → Auth (futuro)"]
+    end
+
+    subgraph LOCAL["Local / Otros"]
+        L1["CSV → Almacenamiento local"]
+        L2["GitHub → Control de versiones"]
+        L3["VS Code → Desarrollo"]
+    end
+
+    PAAS_USO -->|"Despliegue"| CLOUD[Nube]
+    DBAAS_USO -->|"Almacenamiento"| CLOUD
+    LOCAL -->|"Desarrollo"| DEV[Desarrollador]
+
+    style PAAS_USO fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style DBAAS_USO fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style LOCAL fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style CLOUD fill:#1a1a2e,stroke:#7209B7,color:#E8EAF0
+    style DEV fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Justificación de Selección de Proveedor
+
+```mermaid
+graph TB
+    subgraph CRITERIOS["Criterios de Evaluación"]
+        CR1["Costo"]
+        CR2["Facilidad de uso"]
+        CR3["Escalabilidad"]
+        CR4["Comunidad y soporte"]
+        CR5["Integración con el stack"]
+    end
+
+    subgraph VERCEL_J["Vercel — Elegido para Frontend"]
+        VJ1["Despliegue automático desde GitHub"]
+        VJ2["Optimización para React/Vite"]
+        VJ3["Plan gratuito suficiente"]
+        VJ4["CDN global incluido"]
+    end
+
+    subgraph RENDER_J["Render — Elegido para Backend"]
+        RJ1["Soporte nativo para Python/FastAPI"]
+        RJ2["Plan gratuito funcional"]
+        RJ3["Despliegue fácil"]
+        RJ4["Variables de entorno integradas"]
+    end
+
+    subgraph SUPABASE_J["Supabase — Elegido para BD"]
+        SJ1["PostgreSQL completo"]
+        SJ2["API REST automática"]
+        SJ3["Plan gratuito generoso"]
+        SJ4["Dashboard visual"]
+        SJ5["Auth y Storage incluidos"]
+    end
+
+    CRITERIOS --> VERCEL_J
+    CRITERIOS --> RENDER_J
+    CRITERIOS --> SUPABASE_J
+
+    style CRITERIOS fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style VERCEL_J fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style RENDER_J fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style SUPABASE_J fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Diagrama de Decisión — Qué Servicio Usar
+
+```mermaid
+graph TB
+    START[¿Qué necesitas?] --> Q1{¿Almacenar datos?}
+
+    Q1 --> |"Sí"| Q2{¿SQL o NoSQL?}
+    Q1 --> |"No"| Q3{¿Desplegar código?}
+
+    Q2 --> |"SQL"| Q4{¿API automática?}
+    Q2 --> |"NoSQL"| FIREBASE[Firebase / Firestore]
+
+    Q4 --> |"Sí"| SUPA[Supabase — DBaaS]
+    Q4 --> |"No"| PLANET[PlanetScale / Neon]
+
+    Q3 --> |"Frontend estático"| VERCEL2[Vercel — PaaS]
+    Q3 --> |"Backend API"| Q5{¿Lenguaje?}
+
+    Q5 --> |"Python"| RENDER2[Render — PaaS]
+    Q5 --> |"Node.js"| RAILWAY2[Railway — PaaS]
+    Q5 --> |"Go / Rust"| FLY[Fly.io]
+
+    style START fill:#1a1a2e,stroke:#7209B7,color:#E8EAF0
+    style SUPA fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style VERCEL2 fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style RENDER2 fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style RAILWAY2 fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style FIREBASE fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Evolución del Costo según Escala
+
+```mermaid
+graph LR
+    subgraph FASE1["Fase 1 — Desarrollo"]
+        F1A["Costo: $0/mes"]
+        F1B["Servicios: Free tiers"]
+        F1C["Limitaciones: aceptables"]
+    end
+
+    subgraph FASE2["Fase 2 — Demo/Presentación"]
+        F2A["Costo: $0-7/mes"]
+        F2B["Servicios: Free + Render Starter"]
+        F2C["Suficiente para presentar"]
+    end
+
+    subgraph FASE3["Fase 3 — Producción"]
+        F3A["Costo: ~$52-82/mes"]
+        F3B["Servicios: Planes pagos"]
+        F3C["Completo y escalable"]
+    end
+
+    subgraph FASE4["Fase 4 — Escala"]
+        F4A["Costo: $200+/mes"]
+        F4B["Servicios: Planes enterprise"]
+        F4C["Miles de usuarios"]
+    end
+
+    FASE1 --> FASE2 --> FASE3 --> FASE4
+
+    style FASE1 fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style FASE2 fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style FASE3 fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style FASE4 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
