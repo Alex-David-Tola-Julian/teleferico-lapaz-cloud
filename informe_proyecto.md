@@ -704,3 +704,353 @@ Headers necesarios:
 
 ### Nota
 Con la implementación actual, cada ticket registrado desde el simulador se sube automáticamente a Supabase como un solo registro nuevo.
+
+## VIII. Diagramas Adicionales
+
+### Comparación de Líneas del Teleférico
+
+```mermaid
+graph LR
+    subgraph LINEAS["Líneas del Mi Teleférico"]
+        R[Roja — 3 estaciones]
+        A[Amarilla — 3 estaciones]
+        V[Verde — 3 estaciones]
+        AZ[Azul — 3 estaciones]
+        N[Naranja — 4 estaciones]
+        BL[Blanca — 3 estaciones]
+        CE[Celeste — 3 estaciones]
+        MO[Morada — 3 estaciones]
+        CA[Café — 3 estaciones]
+        PL[Plateada — 3 estaciones]
+    end
+
+    R --> |"Taypi Uta — Ajayuni — Jach'a Qhathu"| MAP1[Mapa]
+    A --> |"Sopocachi — Miraflores — Terminal"| MAP1
+    V --> |"Alto Obrajes — Obrajes — Irpavi"| MAP1
+    AZ --> |"El Alto — Ciudad Satélite — 16 de Julio"| MAP1
+    N --> |"Periférica — Garita — Cementerio — Ceja"| MAP1
+    BL --> |"Villa Adela — Senkata — El Tejar"| MAP1
+    CE --> |"Pura Pura — Villa Fátima — Achacachi"| MAP1
+    MO --> |"El Kenko — Parque Urbano — Mi Teleférico Central"| MAP1
+    CA --> |"Kupini — Seguencoma — Calacoto"| MAP1
+    PL --> |"Libertad — San Juan — Río Seco"| MAP1
+
+    style LINEAS fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style MAP1 fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+```
+
+### Flujo de Filtrado de Datos
+
+```mermaid
+graph TB
+    USER[Usuario selecciona filtros] --> FILTER[FilterParams]
+    FILTER --> F1[Filtrar por fecha_inicio]
+    F1 --> F2[Filtrar por fecha_fin]
+    F2 --> F3[Filtrar por líneas]
+    F3 --> F4[Filtrar por hora_min / hora_max]
+    F4 --> F5[Filtrar por días de semana]
+    F5 --> RESULT[DataFrame filtrado]
+    RESULT --> API[Endpoint correspondiente]
+    API --> RESPONSE[JSON al frontend]
+
+    style USER fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style RESULT fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style RESPONSE fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Prophet vs Regresión Lineal
+
+```mermaid
+graph TB
+    DATA[Datos históricos] --> DEC{¿Prophet disponible?}
+
+    DEC --> |"Sí"| PROPHET[Prophet]
+    DEC --> |"No"| LINEAR[Regresión Lineal]
+
+    PROPHET --> P1[Estacionalidad semanal]
+    PROPHET --> P2[Intervalos de confianza 95%]
+    PROPHET --> P3[Changepoints automáticos]
+
+    LINEAR --> L1[Ajuste lineal simple]
+    LINEAR --> L2[Proyección directa]
+    LINEAR --> L3[Sin intervalos]
+
+    P1 --> RESULT[Predicción con banda]
+    P2 --> RESULT
+    P3 --> RESULT
+
+    L1 --> RESULT2[Proyección lineal]
+    L2 --> RESULT2
+    L3 --> RESULT2
+
+    RESULT --> GRAPH["Gráfica con línea punteada + sombra"]
+    RESULT2 --> GRAPH2["Gráfica con línea punteada"]
+
+    style DATA fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style PROPHET fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style LINEAR fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style GRAPH fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style GRAPH2 fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+```
+
+### Caché en Memoria del Backend
+
+```mermaid
+graph TB
+    REQ1[Primera petición] --> CACHE{¿Datos en caché?}
+    CACHE --> |"No"| LOAD[Leer CSV o Supabase]
+    LOAD --> STORE[Guardar en _global_df]
+    STORE --> RETURN1[Retornar datos]
+
+    REQ2[Segunda petición] --> CACHE
+    CACHE --> |"Sí"| RETURN2[Retornar datos directo]
+
+    REQ3[Ticket nuevo] --> APPEND[Agregar fila al CSV]
+    APPEND --> UPDATE[Actualizar _global_df en memoria]
+    UPDATE --> RETURN3[Retornar registro]
+
+    REQ4[Cambiar .env] --> INVALIDATE[invalidate_cache]
+    INVALIDATE --> CACHE
+
+    style CACHE fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style STORE fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style UPDATE fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+```
+
+### React Query — Gestión de Estado
+
+```mermaid
+graph TB
+    subgraph QUERIES["Queries — React Query"]
+        Q1["queryKey: metrics"]
+        Q2["queryKey: config"]
+        Q3["queryKey: cloudStatus"]
+    end
+
+    subgraph ACTIONS["Acciones"]
+        TICKET[Ticket registrado]
+        FILTER[Filtros cambiados]
+        NAV[Navegación]
+    end
+
+    subgraph EFFECTS["Efectos"]
+        INVALIDATE[Invalidate Queries]
+        REFETCH[Refetch automático]
+        UI[UI se actualiza]
+    end
+
+    TICKET --> INVALIDATE
+    FILTER --> REFETCH
+    NAV --> REFETCH
+
+    INVALIDATE --> Q1
+    INVALIDATE --> Q2
+    INVALIDATE --> Q3
+    REFETCH --> Q1
+    REFETCH --> Q2
+    REFETCH --> Q3
+
+    Q1 --> UI
+    Q2 --> UI
+    Q3 --> UI
+
+    style QUERIES fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style ACTIONS fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style EFFECTS fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Validación del Formulario de Tickets
+
+```mermaid
+graph TB
+    START[Usuario hace click] --> CHECK1{¿Línea seleccionada?}
+    CHECK1 --> |"No"| ERR1[Error: Selecciona una línea]
+    CHECK1 --> |"Sí"| CHECK2{¿Pasajeros > 0?}
+    CHECK2 --> |"No"| ERR2[Error: Ingresa un número válido]
+    CHECK2 --> |"Sí"| LOADING[Estado: loading]
+    LOADING --> API[POST /api/registrar-ticket]
+    API --> OK{¿Respuesta OK?}
+    OK --> |"Sí"| SUCCESS[Estado: ok + mostrar confirmación]
+    OK --> |"No"| ERR3[Estado: error + mostrar mensaje]
+    SUCCESS --> RESET[Resetear después de 3.5 segundos]
+
+    style START fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style SUCCESS fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style ERR1 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style ERR2 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style ERR3 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Normalización de Datos
+
+```mermaid
+graph LR
+    RAW[CSV crudo] --> N1[Normalizar líneas]
+    N1 --> N2["Cafe → Café"]
+    N2 --> N3[Normalizar días]
+    N3 --> N4["Miercoles → Miércoles"]
+    N4 --> N5[Convertir tipos]
+    N5 --> N6[fecha → datetime]
+    N6 --> N7[hora → int]
+    N7 --> N8[pasajeros → float]
+    N8 --> N9[Drop NaN]
+    N9 --> CLEAN[DataFrame limpio]
+
+    style RAW fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style CLEAN fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+```
+
+### Estrategia de Pruebas
+
+```mermaid
+graph TB
+    subgraph TESTS["Tests — pytest"]
+        T1[test_api.py — endpoints]
+        T2[Verificar respuestas HTTP]
+        T3[Verificar estructura JSON]
+    end
+
+    subgraph COMMANDS["Comandos"]
+        CMD1["pytest tests/"]
+        CMD2["cd frontend && npm run lint"]
+        CMD3["cd frontend && npm run build"]
+    end
+
+    subgraph CI["Integración Continua"]
+        GITHUB[GitHub Actions]
+        AUTO[Tests automáticos al hacer push]
+    end
+
+    T1 --> CMD1
+    T2 --> CMD1
+    T3 --> CMD1
+    CMD1 --> GITHUB
+    CMD2 --> GITHUB
+    CMD3 --> GITHUB
+    GITHUB --> AUTO
+
+    style TESTS fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style COMMANDS fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style CI fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
+
+### Escalabilidad del Sistema
+
+```mermaid
+graph TB
+    subgraph ACTUAL["Sistema Actual"]
+        A1[CSV local]
+        A2[FastAPI en un servidor]
+        A3[Supabase gratuito]
+    end
+
+    subgraph FUTURO["Escalabilidad Futura"]
+        F1[Redis para caché]
+        F2[Multi-instancia con Docker]
+        F3[Supabase plan Pro]
+        F4[Autenticación de usuarios]
+        F5[WebSockets en tiempo real]
+        F6[Modelos ML serializados .pkl]
+    end
+
+    ACTUAL --> |"Evolución"| FUTURO
+
+    A1 --> F1
+    A2 --> F2
+    A3 --> F3
+    A2 --> F4
+    A2 --> F5
+    A2 --> F6
+
+    style ACTUAL fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style FUTURO fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+```
+
+### Cronograma del Proyecto
+
+```mermaid
+gantt
+    title Cronograma del Proyecto
+    dateFormat  YYYY-MM-DD
+    section Fase 1
+    Generación de datos           :done, d1, 2026-03-01, 15d
+    Análisis exploratorio         :done, d2, after d1, 10d
+    section Fase 2
+    Backend FastAPI               :done, d3, after d2, 20d
+    Endpoints REST                :done, d4, after d3, 10d
+    section Fase 3
+    Frontend React                :done, d5, after d4, 25d
+    Integración API               :done, d6, after d5, 10d
+    section Fase 4
+    Predicción Prophet            :done, d7, after d6, 15d
+    Ranking y Heatmap             :done, d8, after d7, 10d
+    section Fase 5
+    Simulador de Tickets          :done, d9, after d8, 10d
+    Integración Supabase          :done, d10, after d9, 10d
+    section Fase 6
+    Documentación                 :active, d11, after d10, 10d
+    Despliegue final              :d12, after d11, 5d
+```
+
+### Mapa de Calor — Concepto Visual
+
+```mermaid
+graph TB
+    subgraph HEATMAP_DATA["Datos de Entrada"]
+        H1["Días: Lunes a Domingo"]
+        H2["Horas: 06:00 a 22:00"]
+    end
+
+    subgraph MATRIX["Matriz de Pasajeros Promedio"]
+        M1["Lunes 06:00 = 120"]
+        M2["Lunes 12:00 = 850"]
+        M3["Viernes 18:00 = 1200"]
+        M4["Domingo 10:00 = 400"]
+    end
+
+    subgraph OUTPUT["Salida"]
+        O1[Heatmap Plotly]
+        O2["Insight: Viernes 18:00 = pico"]
+    end
+
+    H1 --> MATRIX
+    H2 --> MATRIX
+    M1 --> O1
+    M2 --> O1
+    M3 --> O1
+    M4 --> O1
+    M3 --> O2
+
+    style HEATMAP_DATA fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style MATRIX fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style OUTPUT fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Estructura de un Registro de Ticket
+
+```mermaid
+graph TB
+    subgraph RECORD["Registro nuevo — Ticket"]
+        F["fecha: 2026-06-12"]
+        H["hora: 14"]
+        D["dia_semana: Jueves"]
+        L["linea: Roja"]
+        C["color_linea: #E63946"]
+        E["estacion: Taypi Uta"]
+        LAT["latitud: -16.5000"]
+        LON["longitud: -68.1500"]
+        P["pasajeros: 5"]
+        S["saturacion: 72.5"]
+        CAL["calibrado: true"]
+        FAC["factor_escala: 1.0"]
+    end
+
+    RECORD --> CSV2[CSV local]
+    RECORD --> MEM[DataFrame en memoria]
+    RECORD --> SUP2[Supabase PostgreSQL]
+
+    style RECORD fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style CSV2 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style MEM fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style SUP2 fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
