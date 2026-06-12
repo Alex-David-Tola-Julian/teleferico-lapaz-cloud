@@ -74,17 +74,7 @@ def get_data():
     if _global_df is not None:
         return _global_df
 
-    df = cargar_datos_supabase()
-    if df is not None:
-        df = normalizar_lineas(df)
-        df = normalizar_dias_semana(df)
-        if "fecha" in df.columns:
-            df["fecha"] = pd.to_datetime(df["fecha"])
-            df["fecha"] = df["fecha"].dt.tz_localize(None)
-        _data_source = "supabase"
-        _global_df = df
-        return df
-
+    # Intentar cargar desde CSV local primero (rápido)
     if os.path.exists(CSV_RUTA):
         try:
             df = pd.read_csv(CSV_RUTA)
@@ -97,14 +87,21 @@ def get_data():
         except (ParserError, UnicodeDecodeError):
             df = pd.read_csv(CSV_RUTA + ".gz", engine="python", on_bad_lines="skip", encoding="latin-1", compression="gzip")
         _data_source = "csv.gz"
+    # Si no hay CSV, intentar Supabase como fallback
     else:
-        import sys
-        sys.path.append(ROOT_DIR)
-        from data_generator import generar_dataset
-        df = generar_dataset(fecha_inicio_str="2022-01-01", fecha_fin_str="2024-12-31")
-        os.makedirs(os.path.dirname(CSV_RUTA), exist_ok=True)
-        df.to_csv(CSV_RUTA, index=False)
-        _data_source = "csv"
+        df_supabase = cargar_datos_supabase()
+        if df_supabase is not None:
+            df = df_supabase
+            _data_source = "supabase"
+        else:
+            # Si todo falla, generar dataset
+            import sys
+            sys.path.append(ROOT_DIR)
+            from data_generator import generar_dataset
+            df = generar_dataset(fecha_inicio_str="2022-01-01", fecha_fin_str="2024-12-31")
+            os.makedirs(os.path.dirname(CSV_RUTA), exist_ok=True)
+            df.to_csv(CSV_RUTA, index=False)
+            _data_source = "csv"
 
     df = normalizar_lineas(df)
     df = normalizar_dias_semana(df)
