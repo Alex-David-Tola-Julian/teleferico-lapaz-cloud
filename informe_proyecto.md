@@ -1054,3 +1054,359 @@ graph TB
     style MEM fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
     style SUP2 fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
 ```
+
+## IX. Diagramas UML
+
+### Caso de Uso — Diagrama UML
+
+```mermaid
+graph TB
+    subgraph SISTEMA["Sistema Teleférico La Paz Cloud"]
+        UC1["Visualizar métricas generales"]
+        UC2["Ver mapa de estaciones"]
+        UC3["Analizar tendencia temporal"]
+        UC4["Explorar heatmap de demanda"]
+        UC5["Ver ranking de estaciones"]
+        UC6["Predecir demanda futura"]
+        UC7["Registrar ticket nuevo"]
+        UC8["Filtrar datos por fecha, línea y hora"]
+        UC9["Ver estado del sistema"]
+        UC10["Consultar datos en Supabase"]
+    end
+
+    ADMIN[Administrador] --> UC1
+    ADMIN --> UC2
+    ADMIN --> UC3
+    ADMIN --> UC4
+    ADMIN --> UC5
+    ADMIN --> UC6
+    ADMIN --> UC7
+    ADMIN --> UC8
+    ADMIN --> UC9
+    ADMIN --> UC10
+
+    OPERADOR[Operador] --> UC1
+    OPERADOR --> UC2
+    OPERADOR --> UC7
+    OPERADOR --> UC8
+
+    ANALISTA[Analista de datos] --> UC3
+    ANALISTA --> UC4
+    ANALISTA --> UC5
+    ANALISTA --> UC6
+
+    VISITANTE[Visitante] --> UC1
+    VISITANTE --> UC2
+    VISITANTE --> UC9
+
+    style SISTEMA fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style ADMIN fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style OPERADOR fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style ANALISTA fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style VISITANTE fill:#2a2a1a,stroke:#7209B7,color:#E8EAF0
+```
+
+### Caso de Uso — Tabla de Especificación
+
+| Caso de Uso | Actor | Descripción | Precondición | Postcondición |
+|-------------|-------|-------------|--------------|---------------|
+| UC1 | Admin, Operador, Visitante | Visualizar métricas generales del sistema | Hay datos cargados | Se muestran totales, promedios y saturación |
+| UC2 | Admin, Operador, Visitante | Ver mapa de estaciones en La Paz | Hay datos geográficos | Mapa con marcadores de líneas y estaciones |
+| UC3 | Admin, Analista | Analizar tendencia temporal de pasajeros | Hay datos históricos | Gráficas de evolución diaria y por horas |
+| UC4 | Admin, Analista | Explorar heatmap de demanda por día y hora | Hay datos suficientes | Heatmap con intensidad de pasajeros |
+| UC5 | Admin, Analista | Ver ranking de estaciones más y menos concurridas | Hay datos de estaciones | Top 10 y Bottom 10 ordenados |
+| UC6 | Admin, Analista | Predecir demanda futura con Prophet | Hay ≥10 días de historial | Gráfica con proyección y KPIs |
+| UC7 | Admin, Operador | Registrar ticket nuevo desde el simulador | Línea seleccionada y pasajeros > 0 | Registro guardado en CSV y Supabase |
+| UC8 | Admin, Operador | Filtrar datos por fecha, línea y hora | Hay datos disponibles | Datos filtrados actualizados |
+| UC9 | Admin, Visitante | Ver estado del sistema (Supabase/CSV) | Configuración de entorno | Estado y fuente de datos mostrada |
+| UC10 | Admin | Consultar datos recientes en Supabase | Supabase configurado | Datos visibles en dashboard Supabase |
+
+### Diagrama de Componentes UML
+
+```mermaid
+graph TB
+    subgraph FRONTEND_PKG["Paquete: Frontend"]
+        UI[UI Dashboard]
+        ROUTER[React Router]
+        QUERY[React Query]
+        APIJS[Axios API Client]
+    end
+
+    subgraph BACKEND_PKG["Paquete: Backend"]
+        API_FAST[FastAPI Router]
+        ENDPOINTS[Endpoints]
+        SCHEMAS[Pydantic Schemas]
+    end
+
+    subgraph SERVICES_PKG["Paquete: Services"]
+        DATA_SVC[Data Service]
+        ML_SVC[ML Service]
+        DATA_GEN[Data Generator]
+    end
+
+    subgraph DATA_PKG["Paquete: Datos"]
+        CSV_DS[CSV Dataset]
+        SUPABASE_DB[(Supabase PostgreSQL)]
+    end
+
+    UI --> ROUTER
+    UI --> QUERY
+    QUERY --> APIJS
+    APIJS --> |"HTTP REST"| API_FAST
+
+    API_FAST --> ENDPOINTS
+    ENDPOINTS --> SCHEMAS
+    ENDPOINTS --> DATA_SVC
+    ENDPOINTS --> ML_SVC
+
+    DATA_SVC --> CSV_DS
+    DATA_SVC --> SUPABASE_DB
+    ML_SVC --> DATA_SVC
+    DATA_GEN --> CSV_DS
+
+    style FRONTEND_PKG fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style BACKEND_PKG fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style SERVICES_PKG fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style DATA_PKG fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
+
+### Diagrama de Actividad — Registro de Ticket
+
+```mermaid
+graph TB
+    START((Inicio)) --> A[Seleccionar línea del teleférico]
+    A --> B[Ingresar cantidad de pasajeros]
+    B --> C{¿Línea seleccionada?}
+    C --> |"No"| D[Mostrar error:Selecciona una línea]
+    D --> A
+    C --> |"Sí"| E{¿Pasajeros > 0?}
+    E --> |"No"| F[Mostrar error:Número inválido]
+    F --> B
+    E --> |"Sí"| G[Mostrar estado: loading]
+    G --> H[Enviar POST a /api/registrar-ticket]
+    H --> I{¿Respuesta exitosa?}
+    I --> |"No"| J[Mostrar error del servidor]
+    I --> |"Sí"| K[Guardar registro en estado]
+    K --> L[Agregar al historial de sesión]
+    L --> M[Invalidar queries de React Query]
+    M --> N[Mostrar confirmación verde]
+    N --> O[Esperar 3.5 segundos]
+    O --> P[Limpiar estado de feedback]
+    P --> Q[Resetear formulario]
+    Q --> END((Fin))
+
+    style START fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style END fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style D fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style F fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style J fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style N fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+```
+
+### Diagrama de Actividad — Predicción de Demanda
+
+```mermaid
+graph TB
+    START2((Inicio)) --> A2[Seleccionar línea a predecir]
+    A2 --> B2[Definir número de días]
+    B2 --> C2[Enviar POST a /api/predict]
+    C2 --> D2[Filtrar datos por línea y fecha]
+    D2 --> E2[Agrupar pasajeros por fecha]
+    E2 --> F2{¿≥10 días de historial?}
+    F2 --> |"No"| G2[Retornar error: datos insuficientes]
+    F2 --> |"Sí"| H2{¿Prophet disponible?}
+    H2 --> |"Sí"| I2[Entrenar modelo Prophet]
+    I2 --> J2[Generar predicción con intervalos]
+    H2 --> |"No"| K2[Entrenar Regresión Lineal]
+    K2 --> L2[Generar proyección lineal]
+    J2 --> M2[Calcular KPIs: total, promedio, pico]
+    L2 --> M2
+    M2 --> N2[Retornar history + prediction + kpi]
+    N2 --> O2[Frontend renderiza gráfica Plotly]
+    O2 --> P2[Mostrar KPIs debajo de la gráfica]
+    P2 --> END2((Fin))
+
+    style START2 fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style END2 fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style G2 fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+    style I2 fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style K2 fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+```
+
+### Diagrama de Clases
+
+```mermaid
+classDiagram
+    class FilterParams {
+        +str fecha_inicio
+        +str fecha_fin
+        +List~str~ lineas
+        +int hora_min
+        +int hora_max
+        +List~str~ dias_semana
+    }
+
+    class PredictParams {
+        +FilterParams filters
+        +str linea
+        +int dias_pred
+    }
+
+    class TicketPayload {
+        +str linea
+        +int pasajeros
+    }
+
+    class DataService {
+        +get_data() DataFrame
+        +filter_data(params) DataFrame
+        +registrar_ticket(linea, pasajeros) dict
+        +get_data_source() str
+        +invalidate_cache() void
+    }
+
+    class MLService {
+        +generar_prediccion(df, linea, dias_pred) dict
+    }
+
+    class Settings {
+        +str SUPABASE_URL
+        +str SUPABASE_ANON_KEY
+        +str SUPABASE_TABLE
+    }
+
+    class TicketDashboard {
+        +str lineaSeleccionada
+        +int pasajeros
+        +str estado
+        +list historial
+        +handleSubmit() void
+    }
+
+    class PredictView {
+        +data: object
+        +str linea
+        +int diasPred
+        +renderPlot() Plotly
+    }
+
+    class RankingView {
+        +data: object
+        +renderList() JSX
+    }
+
+    FilterParams <|-- PredictParams
+    DataService --> Settings : usa
+    DataService --> FilterParams : filtra
+    MLService --> DataService : consulta datos
+    TicketDashboard --> TicketPayload : envía
+    PredictView --> PredictParams : envía
+    RankingView --> FilterParams : envía
+```
+
+### Diagrama de Secuencia — Filtro de Datos
+
+```mermaid
+sequenceDiagram
+    actor U as Usuario
+    participant F as Frontend
+    participant A as API
+    participant DS as Data Service
+    participant CSV as CSV / Supabase
+
+    U->>F: Cambia filtros (fecha, línea, hora)
+    F->>A: POST /api/metrics con FilterParams
+    A->>DS: filter_data(params)
+    DS->>CSV: get_data() — carga DataFrame
+    CSV-->>DS: DataFrame completo
+    DS->>DS: Aplicar máscara de filtros
+    DS-->>A: DataFrame filtrado
+    A->>A: Calcular métricas (totales, promedios)
+    A-->>F: JSON con métricas
+    F-->>U: Dashboard se actualiza
+```
+
+### Diagrama de Secuencia — Ranking de Estaciones
+
+```mermaid
+sequenceDiagram
+    actor U as Usuario
+    participant F as Frontend
+    participant A as API
+    participant DS as Data Service
+    participant PD as Pandas
+
+    U->>F: Navega a /ranking
+    F->>A: POST /api/ranking con FilterParams
+    A->>DS: filter_data(params)
+    DS-->>A: DataFrame filtrado
+    A->>PD: groupby estación + línea
+    PD-->>A: Totales por estación
+    A->>A: Ordenar descendente
+    A->>A: Separar Top 10 y Bottom 10
+    A-->>F: JSON con top, bottom, max_total
+    F-->>U: Mostrar listas con barras de progreso
+```
+
+### Diagrama de Secuencia — Heatmap
+
+```mermaid
+sequenceDiagram
+    actor U as Usuario
+    participant F as Frontend
+    participant A as API
+    participant DS as Data Service
+    participant NP as NumPy
+
+    U->>F: Navega a /heatmap
+    F->>A: POST /api/heatmap con FilterParams
+    A->>DS: filter_data(params)
+    DS-->>A: DataFrame filtrado
+    A->>A: Pivot table día_semana × hora
+    A->>NP: Calcular array Z
+    NP-->>A: Matriz de pasajeros promedio
+    A->>NP: argmax → día y hora pico
+    NP-->>A: Insight
+    A-->>F: JSON con x, y, z, insight
+    F-->>U: Renderizar heatmap Plotly
+```
+
+### Diagrama de Paquetes UML
+
+```mermaid
+graph TB
+    subgraph PRESENTATION["Presentación"]
+        REACT[React + Vite]
+        ROUTER2[React Router]
+        RQ2[React Query]
+        PLOTLY[Plotly.js]
+        LEAFLET[Leaflet]
+    end
+
+    subgraph BUSINESS["Lógica de Negocio"]
+        API3[FastAPI]
+        END2[Endpoints]
+        PYDANTIC[Pydantic Schemas]
+    end
+
+    subgraph DOMAIN["Dominio"]
+        DS2[Data Service]
+        ML2[ML Service]
+        GEN2[Data Generator]
+    end
+
+    subgraph INFRASTRUCTURE["Infraestructura"]
+        CSV3[CSV File]
+        SUP2[(Supabase)]
+        dotenv[.env Variables]
+    end
+
+    PRESENTATION -->|"HTTP REST"| BUSINESS
+    BUSINESS --> DOMAIN
+    DOMAIN --> INFRASTRUCTURE
+
+    style PRESENTATION fill:#0d2137,stroke:#3B82F6,color:#E8EAF0
+    style BUSINESS fill:#1a2a1a,stroke:#2DC653,color:#E8EAF0
+    style DOMAIN fill:#2a2a1a,stroke:#FFB703,color:#E8EAF0
+    style INFRASTRUCTURE fill:#2a1a1a,stroke:#E63946,color:#E8EAF0
+```
