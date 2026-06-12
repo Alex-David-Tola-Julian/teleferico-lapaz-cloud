@@ -319,12 +319,12 @@ graph TB
     end
 
     subgraph ROUTES["Rutas"]
-        HOME[/]
-        MAP[/mapa]
-        TEMP[/temporal]
-        HEAT[/heatmap]
-        RANK[/ranking]
-        PRED[/predicciones]
+        HOME["Home — Inicio"]
+        MAP["Mapa"]
+        TEMP["Temporal"]
+        HEAT["Heatmap"]
+        RANK["Ranking"]
+        PRED["Predicciones"]
     end
 
     subgraph COMPONENTS["Componentes"]
@@ -375,19 +375,19 @@ graph TB
 
 ```mermaid
 graph LR
-    subgraph GET["GET"]
-        CONFIG[/api/config]
-        CLOUD[/api/cloud-status]
+    subgraph GET["Método GET"]
+        CONFIG["GET api/config"]
+        CLOUD["GET api/cloud-status"]
     end
 
-    subgraph POST["POST"]
-        METRICS[/api/metrics]
-        MAPAPI[/api/map]
-        TEMPAPI[/api/temporal]
-        HEATAPI[/api/heatmap]
-        RANKAPI[/api/ranking]
-        PREDAPI[/api/predict]
-        TICKAPI[/api/registrar-ticket]
+    subgraph POST["Método POST"]
+        METRICS["POST api/metrics"]
+        MAPAPI["POST api/map"]
+        TEMPAPI["POST api/temporal"]
+        HEATAPI["POST api/heatmap"]
+        RANKAPI["POST api/ranking"]
+        PREDAPI["POST api/predict"]
+        TICKAPI["POST api/registrar-ticket"]
     end
 
     CONFIG --> |"Configuración general"| FE[Frontend]
