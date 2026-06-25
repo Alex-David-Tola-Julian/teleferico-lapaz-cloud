@@ -126,15 +126,15 @@ def invalidate_cache():
 # Mapa de estaciones reales por línea para los tickets simulados
 _ESTACIONES_POR_LINEA = {
     "Roja":     ["Taypi Uta (Estación Central)", "Ajayuni (Cementerio)", "Jach'a Qhathu (16 de Julio)"],
-    "Amarilla": ["Sopocachi", "Miraflores", "Terminal"],
-    "Verde":    ["Alto Obrajes", "Obrajes", "Irpavi"],
-    "Azul":     ["El Alto", "Ciudad Satélite", "16 de Julio"],
-    "Naranja":  ["Periférica", "Garita de Lima", "Cementerio", "Ceja"],
-    "Blanca":   ["Villa Adela", "Senkata", "El Tejar"],
-    "Celeste":  ["Pura Pura", "Villa Fátima", "Achacachi"],
-    "Morada":   ["El Kenko", "Parque Urbano", "Mi Teleférico Central"],
-    "Café":     ["Kupini", "Seguencoma", "Calacoto"],
-    "Plateada": ["Libertad", "San Juan", "Río Seco"],
+    "Amarilla": ["Chuqui Apu (Libertador)", "Qhana Pata (Mirador)", "Tupa Katari (Quta Uma)", "Phuna Wiña (Ciudad Satélite)"],
+    "Verde":    ["Libertador (Curva de Holguín)", "Irpawi (Obrajes)", "Ainawi (Bolognia)", "Taypi Uta (Irpawi)"],
+    "Azul":     ["Jach'a Qhathu (16 de Julio)", "Qhana Taki (Plaza Libertad)", "Suma Qamaña (Plaza La Paz)", "Yatiña Uta (UPEA)", "Waña Jawira (Ex Tranca Río Seco)"],
+    "Naranja":  ["Taypi Uta (Central)", "Ríosinho (Armentia)", "Apumayu (Periférica)", "Villarroel (Plaza Villarroel)"],
+    "Blanca":   ["Villarroel (Plaza Villarroel)", "Inalmama (Monumento Busch)", "Qhuyana (Plaza Triangular)", "Jalsuri (Av. del Poeta)"],
+    "Celeste":  ["Chuqui Apu (Libertador)", "Jalsuri (Av. del Poeta)", "Prado (Teatro al Aire Libre)", "Camacho (Prado)"],
+    "Morada":   ["Utjawi (Edificio Correos)", "Tarija (Faro Murillo)", "Jach'a Thaki (6 de Marzo)"],
+    "Café":     ["Inalmama (Monumento Busch)", "Las Villas (Villa Copacabana / San Antonio)"],
+    "Plateada": ["Jach'a Qhathu (16 de Julio)", "Faro Murillo", "Ciudad Satélite"],
 }
 
 _COLORES_LINEA = {
